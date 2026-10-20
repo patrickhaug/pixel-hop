@@ -79,6 +79,56 @@ enum Sprites {
         ]),
     ]
 
+    static let coin = coinSpin[0]
+
+    static let coinSpin = [coinFront, coinTurn, coinSide, coinTurn]
+
+    private static let coinFront = texture([
+        ".oooo.",
+        "oyyyyo",
+        "oywyyo",
+        "oywyyo",
+        "oywyyo",
+        "oywyyo",
+        "oyyyyo",
+        ".oooo.",
+    ])
+
+    private static let coinTurn = texture([
+        "..oo..",
+        ".oyyo.",
+        ".owyo.",
+        ".owyo.",
+        ".owyo.",
+        ".owyo.",
+        ".oyyo.",
+        "..oo..",
+    ])
+
+    private static let coinSide = texture([
+        "..oo..",
+        "..yo..",
+        "..yo..",
+        "..yo..",
+        "..yo..",
+        "..yo..",
+        "..yo..",
+        "..oo..",
+    ])
+
+    static let digits = [
+        ["www", "w.w", "w.w", "w.w", "www"],
+        [".w.", "ww.", ".w.", ".w.", "www"],
+        ["www", "..w", "www", "w..", "www"],
+        ["www", "..w", ".ww", "..w", "www"],
+        ["w.w", "w.w", "www", "..w", "..w"],
+        ["www", "w..", "www", "..w", "www"],
+        ["www", "w..", "www", "w.w", "www"],
+        ["www", "..w", "..w", ".w.", ".w."],
+        ["www", "w.w", "www", "w.w", "www"],
+        ["www", "w.w", "www", "..w", "www"],
+    ].map { texture($0) }
+
     static let jumpButton = texture([
         ".ooooooooooo.",
         "oyyyyyyyyyyyo",
