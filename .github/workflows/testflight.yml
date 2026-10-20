@@ -31,7 +31,7 @@ jobs:
             fi
           done
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: xcodebuild -version
 
       - name: Write API key
