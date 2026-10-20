@@ -12,12 +12,17 @@ final class GameScene: SKScene {
     private let hero = SKSpriteNode(texture: Sprites.hero)
     private let ground = SKNode()
     private let obstacles = SKNode()
+    private let coins = SKNode()
+    private let coinCounter = SKNode()
     private let jumpButton = SKSpriteNode(texture: Sprites.jumpButton)
     private var velocity: CGFloat = 0
     private var lastTime: TimeInterval = 0
     private var distance: CGFloat = 0
     private var nextObstacle: CGFloat = 60
     private var crashTime: TimeInterval?
+    private var coinCount = UserDefaults.standard.integer(forKey: "coins") {
+        didSet { UserDefaults.standard.set(coinCount, forKey: "coins") }
+    }
 
     init(viewSize: CGSize) {
         let aspect = viewSize.height > 0 ? viewSize.width / viewSize.height : 2
@@ -35,12 +40,20 @@ final class GameScene: SKScene {
         guard hero.parent == nil else { return }
         buildGround()
         addChild(obstacles)
+        addChild(coins)
         hero.anchorPoint = CGPoint(x: 0.5, y: 0)
         hero.position = CGPoint(x: 36, y: groundY)
         addChild(hero)
         jumpButton.anchorPoint = .zero
         jumpButton.position = CGPoint(x: size.width - 17, y: buttonY)
         addChild(jumpButton)
+        let coinIcon = SKSpriteNode(texture: Sprites.coin)
+        coinIcon.anchorPoint = .zero
+        coinIcon.position = CGPoint(x: 10, y: size.height - 14)
+        addChild(coinIcon)
+        coinCounter.position = CGPoint(x: 19, y: size.height - 12)
+        addChild(coinCounter)
+        updateCoinCounter()
         startRunning()
     }
 
@@ -69,9 +82,12 @@ final class GameScene: SKScene {
         distance += step
         ground.position.x = -distance.truncatingRemainder(dividingBy: Sprites.ground.size().width)
         if distance >= nextObstacle { spawnObstacle() }
-        for obstacle in obstacles.children {
-            obstacle.position.x -= step
-            if obstacle.frame.maxX < 0 { obstacle.removeFromParent() }
+        for node in obstacles.children + coins.children {
+            node.position.x -= step
+            if node.frame.maxX < 0 { node.removeFromParent() }
+        }
+        for coin in coins.children where hero.frame.intersects(coin.frame) {
+            collect(coin)
         }
         let hitBox = hero.frame.insetBy(dx: 2, dy: 1)
         if obstacles.children.contains(where: { hitBox.intersects($0.frame.insetBy(dx: 1, dy: 1)) }) {
@@ -84,8 +100,40 @@ final class GameScene: SKScene {
         guard let texture = Sprites.obstacles.randomElement() else { return }
         let obstacle = SKSpriteNode(texture: texture)
         obstacle.anchorPoint = .zero
-        obstacle.position = CGPoint(x: size.width, y: groundY)
+        obstacle.position = CGPoint(x: size.width + 16, y: groundY)
         obstacles.addChild(obstacle)
+        let arc: [(dx: CGFloat, dy: CGFloat)] = [(-14, 20), (0, 32), (14, 20)]
+        for (dx, dy) in arc {
+            spawnCoin(at: CGPoint(x: obstacle.frame.midX.rounded() + dx, y: groundY + dy))
+        }
+    }
+
+    private func spawnCoin(at position: CGPoint) {
+        let coin = SKSpriteNode(texture: Sprites.coin)
+        coin.position = position
+        coin.run(.repeatForever(.animate(with: Sprites.coinSpin, timePerFrame: 0.12)))
+        coins.addChild(coin)
+    }
+
+    private func collect(_ coin: SKNode) {
+        coin.move(toParent: self)
+        coin.run(.sequence([
+            .group([.moveBy(x: 0, y: 8, duration: 0.25), .fadeOut(withDuration: 0.25)]),
+            .removeFromParent(),
+        ]))
+        coinCount += 1
+        updateCoinCounter()
+        UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+    }
+
+    private func updateCoinCounter() {
+        coinCounter.removeAllChildren()
+        for (i, digit) in String(coinCount).compactMap(\.wholeNumberValue).enumerated() {
+            let sprite = SKSpriteNode(texture: Sprites.digits[digit])
+            sprite.anchorPoint = .zero
+            sprite.position.x = CGFloat(i * 4)
+            coinCounter.addChild(sprite)
+        }
     }
 
     private func crash() {
@@ -101,6 +149,7 @@ final class GameScene: SKScene {
     private func restart() {
         crashTime = nil
         obstacles.removeAllChildren()
+        coins.removeAllChildren()
         nextObstacle = distance + 60
         hero.removeAllActions()
         hero.alpha = 1
