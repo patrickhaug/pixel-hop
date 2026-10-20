@@ -21,8 +21,6 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      ARCHIVE: ${{ runner.temp }}/PixelHop.xcarchive
-      KEY_PATH: ${{ runner.temp }}/AuthKey.p8
     steps:
       - name: Require secrets
         run: |
@@ -37,7 +35,7 @@ jobs:
       - run: xcodebuild -version
 
       - name: Write API key
-        run: printf '%s' "$ASC_KEY_P8" > "$KEY_PATH"
+        run: printf '%s' "$ASC_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
 
       - name: Archive
         run: |
@@ -46,7 +44,7 @@ jobs:
             -scheme PixelHop \
             -configuration Release \
             -destination 'generic/platform=iOS' \
-            -archivePath "$ARCHIVE" \
+            -archivePath "$RUNNER_TEMP/PixelHop.xcarchive" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
             CODE_SIGNING_ALLOWED=NO
@@ -55,15 +53,15 @@ jobs:
         run: |
           plutil -replace teamID -string "$APPLE_TEAM_ID" ExportOptions.plist
           xcodebuild -exportArchive \
-            -archivePath "$ARCHIVE" \
+            -archivePath "$RUNNER_TEMP/PixelHop.xcarchive" \
             -exportOptionsPlist ExportOptions.plist \
             -exportPath "$RUNNER_TEMP/export" \
             -allowProvisioningUpdates \
-            -authenticationKeyPath "$KEY_PATH" \
+            -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID"
           echo "Build ${{ github.run_number }} uploaded, TestFlight processing takes 5-15 min" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Remove API key
         if: always()
-        run: rm -f "$KEY_PATH"
+        run: rm -f "$RUNNER_TEMP/AuthKey.p8"
