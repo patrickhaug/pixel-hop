@@ -27,57 +27,45 @@ enum Palette {
 }
 
 enum Sprites {
-    static let hero = heroRun[0]
+    static let heroFrames: [[SKTexture]] = (0..<4).map { turns in
+        heroSteps.map { texture(rotated($0, turns: turns)) }
+    }
 
-    static let heroRun = [
-        texture(heroBody + ["..gg..gg..", ".gg....gg."]),
-        texture(heroBody + ["...gg.gg..", "..gg.gg..."]),
+    private static let heroSteps = [
+        [
+            "..........",
+            "...w..w...",
+            "..wkggkw..",
+            "g.gggggg.g",
+            "gggllllggg",
+            "..gllllg..",
+            "..gllllg..",
+            "gggggggggg",
+            "g.g....g.g",
+            "..........",
+        ],
+        [
+            "..........",
+            "...w..w...",
+            "..wkggkw..",
+            "..gggggg..",
+            "gggllllggg",
+            "g.gllllg.g",
+            "..gllllg..",
+            "..gggggg..",
+            ".gg....gg.",
+            "..........",
+        ],
     ]
 
-    private static let heroBody = [
-        "..ww..ww..",
-        ".wkw.wkw..",
-        ".gggggggg.",
-        "gggggggggk",
-        "gglllllgg.",
-        ".glllllgg.",
-    ]
-
-    static let obstacles = [
-        texture([
-            "....eeee....",
-            "..eewwweee..",
-            ".eewweeeeed.",
-            "eeweeeeeeedd",
-            "eeeeeeeeeddd",
-            "deeeeeeedddd",
-            ".dddddddddd.",
-        ]),
-        texture([
-            "...rrrr...",
-            ".rrwwrrrr.",
-            "rrwwrrrrwr",
-            "rrrrrrrrrr",
-            "rwwrrrwwrr",
-            ".rrrrrrrr.",
-            "..wwwwww..",
-            "..wkwwkw..",
-            "..wwwwww..",
-            "..wwwwww..",
-            "..eeeeee..",
-        ]),
-        texture([
-            "ooooooooo",
-            "oyyyyyyyo",
-            "oyryyyryo",
-            "oyyryryyo",
-            "oyyyryyyo",
-            "oyyryryyo",
-            "oyryyyryo",
-            "oyyyyyyyo",
-            "ooooooooo",
-        ]),
-    ]
+    private static func rotated(_ rows: [String], turns: Int) -> [String] {
+        (0..<turns).reduce(rows) { rows, _ in
+            let grid = rows.map { Array($0) }
+            return (0..<(grid.first?.count ?? 0)).map { x in
+                String(grid.reversed().map { $0[x] })
+            }
+        }
+    }
 
     static let coin = coinSpin[0]
 
@@ -129,29 +117,29 @@ enum Sprites {
         ["www", "w.w", "www", "..w", "www"],
     ].map { texture($0) }
 
-    static let jumpButton = texture([
-        ".ooooooooooo.",
-        "oyyyyyyyyyyyo",
-        "oyyyyykyyyyyo",
-        "oyyyykkkyyyyo",
-        "oyyykkkkkyyyo",
-        "oyykkkkkkkyyo",
-        "oyyyykkkyyyyo",
-        "oyyyykkkyyyyo",
-        "oyyyyyyyyyyyo",
-        "orrrrrrrrrrro",
-        ".ooooooooooo.",
+    static let dpad = texture([
+        ".......kkkkkkk.......",
+        ".......kmmmmmk.......",
+        ".......kmmemmk.......",
+        ".......kmeeemk.......",
+        ".......keeeeek.......",
+        ".......kmmmmmk.......",
+        ".......kmmmmmk.......",
+        "kkkkkkkmmmmmmmkkkkkkk",
+        "kmmmemmmmmmmmmmmemmmk",
+        "kmmeemmmmmmmmmmmeemmk",
+        "kmeeemmmmmmmmmmmeeemk",
+        "kmmeemmmmmmmmmmmeemmk",
+        "kmmmemmmmmmmmmmmemmmk",
+        "kkkkkkkmmmmmmmkkkkkkk",
+        ".......kmmmmmk.......",
+        ".......kmmmmmk.......",
+        ".......keeeeek.......",
+        ".......kmeeemk.......",
+        ".......kmmemmk.......",
+        ".......kmmmmmk.......",
+        ".......kkkkkkk.......",
     ])
-
-    static let ground = texture((0..<20).map { y in
-        String((0..<16).map { x -> Character in
-            switch y {
-            case 0: "l"
-            case 1: x % 5 == 0 ? "l" : "g"
-            default: (x * 7 + y * 3) % 11 == 0 ? "d" : "m"
-            }
-        })
-    })
 
     static func texture(_ rows: [String]) -> SKTexture {
         let width = rows.map(\.count).max() ?? 1
