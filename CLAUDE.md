@@ -21,6 +21,6 @@ Retro pixel game for iPhone that Patrick builds with his son. The son is the gam
 ## Pipeline
 
 - Claude Code cloud runs on Linux without Xcode: you cannot build or run the app there. Work on a branch and open a PR; `.github/workflows/ci.yml` builds it on macOS. If the check goes red, read the log and push a fix as a new commit.
-- Patrick merges the PR. `.github/workflows/testflight.yml` then archives, signs via the App Store Connect API key (cloud signing) and uploads to TestFlight. Build number = GitHub run number. It shows up in TestFlight about 20-30 min after the merge.
+- When the CI check is green, Claude merges the PR itself (squash, with a commit message so no trailer is added). `.github/workflows/testflight.yml` then archives, signs via the App Store Connect API key (cloud signing) and uploads to TestFlight. Build number = GitHub run number. It shows up in TestFlight about 20-30 min after the merge.
 - Commits: conventional prefix (`feat:`, `fix:` ...), no `Co-Authored-By` or session trailers, no force push.
 - Local: `open PixelHop.xcodeproj`, run on a simulator. Screenshots go to `__dev/`.
