@@ -27,15 +27,70 @@ enum Palette {
 }
 
 enum Sprites {
-    static let hero = texture([
+    static let hero = heroRun[0]
+
+    static let heroRun = [
+        texture(heroBody + ["..gg..gg..", ".gg....gg."]),
+        texture(heroBody + ["...gg.gg..", "..gg.gg..."]),
+    ]
+
+    private static let heroBody = [
         "..ww..ww..",
         ".wkw.wkw..",
         ".gggggggg.",
         "gggggggggk",
         "gglllllgg.",
         ".glllllgg.",
-        "..gg..gg..",
-        ".gg....gg.",
+    ]
+
+    static let obstacles = [
+        texture([
+            "....eeee....",
+            "..eewwweee..",
+            ".eewweeeeed.",
+            "eeweeeeeeedd",
+            "eeeeeeeeeddd",
+            "deeeeeeedddd",
+            ".dddddddddd.",
+        ]),
+        texture([
+            "...rrrr...",
+            ".rrwwrrrr.",
+            "rrwwrrrrwr",
+            "rrrrrrrrrr",
+            "rwwrrrwwrr",
+            ".rrrrrrrr.",
+            "..wwwwww..",
+            "..wkwwkw..",
+            "..wwwwww..",
+            "..wwwwww..",
+            "..eeeeee..",
+        ]),
+        texture([
+            "ooooooooo",
+            "oyyyyyyyo",
+            "oyryyyryo",
+            "oyyryryyo",
+            "oyyyryyyo",
+            "oyyryryyo",
+            "oyryyyryo",
+            "oyyyyyyyo",
+            "ooooooooo",
+        ]),
+    ]
+
+    static let jumpButton = texture([
+        ".ooooooooooo.",
+        "oyyyyyyyyyyyo",
+        "oyyyyykyyyyyo",
+        "oyyyykkkyyyyo",
+        "oyyykkkkkyyyo",
+        "oyykkkkkkkyyo",
+        "oyyyykkkyyyyo",
+        "oyyyykkkyyyyo",
+        "oyyyyyyyyyyyo",
+        "orrrrrrrrrrro",
+        ".ooooooooooo.",
     ])
 
     static let ground = texture((0..<20).map { y in
