@@ -2,11 +2,12 @@ import SpriteKit
 import UIKit
 
 final class GameScene: SKScene {
-    private static let worldHeight: CGFloat = 100
+    private static let shortSide: CGFloat = 100
     private let walkSpeed: CGFloat = 40
 
     private let hero = SKSpriteNode(texture: Sprites.heroFrames[Direction.down.rawValue][0])
     private let coins = SKNode()
+    private let coinIcon = SKSpriteNode(texture: Sprites.coin)
     private let coinCounter = SKNode()
     private let cameraNode = SKCameraNode()
     private let dpad = SKSpriteNode(texture: Sprites.dpad)
@@ -38,8 +39,7 @@ final class GameScene: SKScene {
     }
 
     init(viewSize: CGSize) {
-        let aspect = viewSize.height > 0 ? viewSize.width / viewSize.height : 2
-        super.init(size: CGSize(width: (Self.worldHeight * aspect).rounded(), height: Self.worldHeight))
+        super.init(size: Self.sceneSize(for: viewSize))
         scaleMode = .aspectFill
         anchorPoint = CGPoint(x: 0.5, y: 0.5)
         backgroundColor = Palette.color("k")
@@ -61,6 +61,15 @@ final class GameScene: SKScene {
         camera = cameraNode
         addChild(cameraNode)
         buildHud()
+        followHero()
+    }
+
+    func fit(to viewSize: CGSize) {
+        size = Self.sceneSize(for: viewSize)
+    }
+
+    override func didChangeSize(_ oldSize: CGSize) {
+        layoutHud()
         followHero()
     }
 
@@ -95,6 +104,18 @@ final class GameScene: SKScene {
         for coin in coins.children where reach.intersects(coin.frame) {
             collect(coin)
         }
+    }
+
+    private static func sceneSize(for viewSize: CGSize) -> CGSize {
+        let short = min(viewSize.width, viewSize.height)
+        guard short > 0 else { return CGSize(width: shortSide * 2, height: shortSide) }
+        let scale = short / shortSide
+        return CGSize(width: (viewSize.width / scale).rounded(), height: (viewSize.height / scale).rounded())
+    }
+
+    private static func clamp(_ value: CGFloat, view: CGFloat, world: CGFloat) -> CGFloat {
+        guard world > view else { return world / 2 }
+        return min(max(value, view / 2), world - view / 2)
     }
 
     private var dpadHome: CGPoint {
@@ -143,9 +164,10 @@ final class GameScene: SKScene {
     }
 
     private func followHero() {
-        let x = min(max(hero.position.x, size.width / 2), WorldMap.size.width - size.width / 2)
-        let y = min(max(hero.position.y, size.height / 2), WorldMap.size.height - size.height / 2)
-        cameraNode.position = CGPoint(x: x, y: y)
+        cameraNode.position = CGPoint(
+            x: Self.clamp(hero.position.x, view: size.width, world: WorldMap.size.width),
+            y: Self.clamp(hero.position.y, view: size.height, world: WorldMap.size.height)
+        )
     }
 
     private func animateHero() {
@@ -158,17 +180,20 @@ final class GameScene: SKScene {
     }
 
     private func buildHud() {
-        let coinIcon = SKSpriteNode(texture: Sprites.coin)
         coinIcon.anchorPoint = .zero
-        coinIcon.position = CGPoint(x: -size.width / 2 + 10, y: size.height / 2 - 14)
         cameraNode.addChild(coinIcon)
-        coinCounter.position = CGPoint(x: -size.width / 2 + 19, y: size.height / 2 - 12)
         cameraNode.addChild(coinCounter)
         updateCoinCounter()
         dpad.anchorPoint = .zero
         dpad.alpha = 0.85
-        dpad.position = dpadHome
         cameraNode.addChild(dpad)
+        layoutHud()
+    }
+
+    private func layoutHud() {
+        coinIcon.position = CGPoint(x: -size.width / 2 + 10, y: size.height / 2 - 14)
+        coinCounter.position = CGPoint(x: -size.width / 2 + 19, y: size.height / 2 - 12)
+        dpad.position = dpadHome
     }
 
     private func spawnCoin(at position: CGPoint) {
