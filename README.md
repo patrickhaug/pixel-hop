@@ -1,6 +1,6 @@
 # Pixel Hop
 
-Retro pixel game for iPhone. Idea → Claude Code (cloud) → PR → merge → TestFlight.
+Retro pixel game for iPhone and iPad. Idea → Claude Code (cloud) → PR → merge → TestFlight.
 
 ## One-time setup
 

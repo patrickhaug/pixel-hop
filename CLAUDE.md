@@ -1,6 +1,6 @@
 # Pixel Hop
 
-Retro pixel game for iPhone that Patrick builds with his son. The son is the game designer: he decides what the game becomes, Claude turns his ideas into code. Swift 6, SwiftUI shell, SpriteKit scene, no dependencies.
+Retro pixel game for iPhone and iPad that Patrick builds with his son. The son is the game designer: he decides what the game becomes, Claude turns his ideas into code. Swift 6, SwiftUI shell, SpriteKit scene, no dependencies.
 
 ## Working with the game designer
 
@@ -14,7 +14,8 @@ Retro pixel game for iPhone that Patrick builds with his son. The son is the gam
 
 - `PixelHop/PixelHopApp.swift` app entry, `PixelHop/GameScene.swift` game logic, `PixelHop/Sprites.swift` palette and pixel art.
 - Pixel art is ASCII: one string per row, one character per pixel, characters are keys of `Palette.colors`, `.` is transparent. New sprites are `texture([...])` in `Sprites`.
-- World is 100 px high, width follows the screen aspect, origin bottom-left, ground top at `y = 20`. Landscape, iPhone only.
+- Top-down open world: `PixelHop/WorldMap.swift` is an ASCII map of 10 px tiles (art in `PixelHop/Tiles.swift`), origin bottom-left, camera follows the hero. The view always shows 100 px along the short screen side, the long side follows the aspect.
+- iPhone: landscape only. iPad: all orientations and resizable windows, the scene adapts via `GameScene.fit(to:)`.
 - Every file in `PixelHop/` is picked up automatically (synced folder). Never touch `project.pbxproj` to add files.
 - Default actor isolation is `MainActor`. No code comments, match the surrounding style, small focused files.
 

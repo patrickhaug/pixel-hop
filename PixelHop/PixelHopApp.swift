@@ -20,6 +20,7 @@ struct GameView: View {
         GeometryReader { geometry in
             if let scene {
                 SpriteView(scene: scene)
+                    .onChange(of: geometry.size) { _, size in scene.fit(to: size) }
             } else {
                 Color.black.onAppear { scene = GameScene(viewSize: geometry.size) }
             }
