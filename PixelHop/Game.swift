@@ -44,6 +44,7 @@ final class Game {
     @ObservationIgnored private var hopTime: Float = 0
     @ObservationIgnored private var partner: Resident?
     @ObservationIgnored private var dialogAge: Float = 0
+    @ObservationIgnored private var screenshotTalkDone = false
 
     private let walkSpeed: Float = 3.2
     private let cameraOffset: SIMD3<Float> = [0, 10, 10.5]
@@ -80,6 +81,8 @@ final class Game {
         return root
     }
 
+    private static let screenshotTalk = UserDefaults.standard.bool(forKey: "screenshotTalk")
+
     private static var start: SIMD2<Float> {
         let parts = UserDefaults.standard.string(forKey: "screenshotStart")?.split(separator: ",").compactMap { Float($0) } ?? []
         return parts.count == 2 ? SIMD2<Float>(parts[0], parts[1]) : WorldMap.start
@@ -100,6 +103,10 @@ final class Game {
         try? chunks?.update(around: SIMD2<Float>(hopper.position.x, hopper.position.z), budget: 2)
         updateCoins(dt)
         updateResidents(dt)
+        if Self.screenshotTalk, !screenshotTalkDone, time > 17 {
+            screenshotTalkDone = true
+            talk()
+        }
     }
 
     func talk() {

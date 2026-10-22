@@ -100,7 +100,7 @@ final class Residents {
     private var models: [Character: ModelEntity] = [:]
 
     private static let home: [SIMD2<Int>: Character] = [
-        [22, 19]: "h", [7, 9]: "k", [39, 13]: "k", [6, 18]: "c",
+        [23, 18]: "h", [7, 9]: "k", [39, 13]: "k", [6, 18]: "c",
         [27, 20]: "c", [37, 23]: "d", [12, 24]: "f", [23, 13]: "q",
     ]
 

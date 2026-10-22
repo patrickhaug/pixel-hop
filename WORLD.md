@@ -103,7 +103,7 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
 | `f` | Fuchs | Fred, Flinki, Rosa | ja |
 | `q` | Frosch | Fritz, Quabbel, Kiki | nein |
 
-- **Wo sie wohnen** (`Residents.swift`): Auf der Heimatinsel gibt es 8 feste Bewohner (`Residents.home`), einer davon, der Hund, steht direkt neben dem Start. Draußen entscheidet der Hash pro begehbarer Kachel:
+- **Wo sie wohnen** (`Residents.swift`): Auf der Heimatinsel gibt es 8 feste Bewohner (`Residents.home`), einer davon, der Hund, steht direkt neben dem Start bei (23, 18). Draußen entscheidet der Hash pro begehbarer Kachel:
   - auf Pflaster 1,2 %: Katze, Hund oder Huhn
   - auf Wiese, Blumen und Wegen 0,4 %: Fuchs, Frosch, Huhn oder Hund
   - am Strand 1 %: Ente oder Frosch
@@ -132,4 +132,4 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
 
 ## Prüfen ohne Mac
 
-- CI baut die App, startet sie im iPhone-Simulator und macht Screenshots. Die Bilder stehen im Log zwischen `SCREENSHOT-BEGIN <name>` und `SCREENSHOT-END <name>` als Base64-JPEG und zusätzlich als Artefakt `screenshots`: `start` zeigt die Heimatinsel, `village` ein erzeugtes Dorf. Mit dem Startargument `-screenshotStart x,z` beginnt Hopper an einer anderen Stelle. Weil das iPhone im Hochformat bootet, liegt das Querformat-Spiel im Bild um 90° gedreht.
+- CI baut die App, startet sie im iPhone-Simulator und macht Screenshots. Die Bilder stehen im Log zwischen `SCREENSHOT-BEGIN <name>` und `SCREENSHOT-END <name>` als Base64-JPEG und zusätzlich als Artefakt `screenshots`: `start` zeigt die Heimatinsel, `talk` ein Gespräch mit dem Hund am Start (Startargument `-screenshotTalk YES`), `village` ein erzeugtes Dorf. Mit dem Startargument `-screenshotStart x,z` beginnt Hopper an einer anderen Stelle. Weil das iPhone im Hochformat bootet, liegt das Querformat-Spiel im Bild um 90° gedreht.

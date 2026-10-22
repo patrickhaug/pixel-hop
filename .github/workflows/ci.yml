@@ -61,6 +61,7 @@ jobs:
             xcrun simctl terminate "$UDID" dev.patrickhaug.pixelhop
           }
           shoot start
+          shoot talk -screenshotTalk YES
           shoot village -screenshotStart 3.5,-55.5
           xcrun simctl spawn "$UDID" log show --last 3m --style compact --predicate 'process == "PixelHop"' | tail -n 60
 
