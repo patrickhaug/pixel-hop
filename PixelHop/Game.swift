@@ -53,18 +53,18 @@ final class Game {
         let atlas = Atlas.shared
         let material = try await Scenery.pixelMaterial(atlas.image)
         root.addChild(ModelEntity(mesh: try Terrain.mesh(atlas: atlas).resource(named: "terrain"), materials: [material]))
-        for (key, model) in Models.props {
-            let prop = ModelEntity(mesh: try model.mesh(atlas: atlas).resource(named: "prop-\(key)"), materials: [material])
-            for center in WorldMap.centers(of: key) {
-                let copy = prop.clone(recursive: true)
-                copy.position = [center.x, 0, center.y]
+        for (key, prop) in Models.props {
+            let entity = ModelEntity(mesh: try prop.model.mesh(atlas: atlas).resource(named: "prop-\(key)"), materials: [material])
+            for center in WorldMap.placements(of: key, footprint: prop.footprint) {
+                let copy = entity.clone(recursive: true)
+                copy.position = [center.x, Block.of(key).height, center.y]
                 root.addChild(copy)
             }
         }
         let coin = ModelEntity(mesh: try Models.coin.mesh(atlas: atlas).resource(named: "coin"), materials: [material])
-        for center in WorldMap.centers(of: "C") {
+        for center in "Ccds".flatMap({ WorldMap.centers(of: $0) }) {
             let copy = coin.clone(recursive: true)
-            copy.position = [center.x, 0.2, center.y]
+            copy.position = [center.x, WorldMap.height(center) + 0.2, center.y]
             root.addChild(copy)
             coinEntities.append(copy)
         }
@@ -72,7 +72,7 @@ final class Game {
         hopper.addChild(try Scenery.shadow())
         hopper.addChild(body)
         let start = WorldMap.centers(of: "@").first ?? [1.5, 1.5]
-        hopper.position = [start.x, 0, start.y]
+        move(to: start)
         root.addChild(hopper)
         camera.camera.fieldOfViewInDegrees = 40
         camera.camera.far = 300
@@ -116,7 +116,7 @@ final class Game {
     }
 
     private func move(to position: SIMD2<Float>) {
-        hopper.position = [position.x, 0, position.y]
+        hopper.position = [position.x, WorldMap.height(position), position.y]
     }
 
     private static func isBlocked(_ center: SIMD2<Float>) -> Bool {
@@ -135,7 +135,7 @@ final class Game {
         var remaining: [Entity] = []
         for coin in coinEntities {
             coin.orientation = spin
-            coin.position.y = 0.2 + sin(time * 3) * 0.06
+            coin.position.y = WorldMap.height(SIMD2<Float>(coin.position.x, coin.position.z)) + 0.2 + sin(time * 3) * 0.06
             if simd_distance(SIMD2<Float>(coin.position.x, coin.position.z), reach) < 0.55 {
                 collect(coin)
             } else {

@@ -15,17 +15,24 @@ struct VoxelModel {
         set { if contains(p) { voxels[index(p)] = newValue } }
     }
 
-    mutating func box(_ key: Character, x: ClosedRange<Int>, y: ClosedRange<Int>, z: ClosedRange<Int>) {
-        for px in x { for py in y { for pz in z { self[[px, py, pz]] = key } } }
+    static func noise(_ p: SIMD3<Int>) -> Int {
+        var hash: UInt32 = 2_166_136_261
+        for value in [p.x, p.y, p.z] {
+            hash = (hash ^ UInt32(truncatingIfNeeded: value)) &* 16_777_619
+        }
+        return Int(hash)
     }
 
-    mutating func ball(center: SIMD3<Float>, radius: SIMD3<Float>, color: (SIMD3<Int>) -> Character) {
-        for px in 0..<size.x {
-            for py in 0..<size.y {
-                for pz in 0..<size.z {
+    mutating func box(_ key: Character, x: ClosedRange<Int>, y: ClosedRange<Int>, z: ClosedRange<Int>) {
+        box(x: x, y: y, z: z) { _ in key }
+    }
+
+    mutating func box(x: ClosedRange<Int>, y: ClosedRange<Int>, z: ClosedRange<Int>, color: (SIMD3<Int>) -> Character?) {
+        for px in x {
+            for py in y {
+                for pz in z {
                     let p = SIMD3<Int>(px, py, pz)
-                    let d = (SIMD3<Float>(p) - center) / radius
-                    if (d * d).sum() <= 1 { self[p] = color(p) }
+                    if let key = color(p) { self[p] = key }
                 }
             }
         }
@@ -33,6 +40,35 @@ struct VoxelModel {
 
     mutating func ball(_ key: Character, center: SIMD3<Float>, radius: SIMD3<Float>) {
         ball(center: center, radius: radius) { _ in key }
+    }
+
+    mutating func ball(center: SIMD3<Float>, radius: SIMD3<Float>, color: (SIMD3<Int>) -> Character?) {
+        for px in 0..<size.x {
+            for py in 0..<size.y {
+                for pz in 0..<size.z {
+                    let p = SIMD3<Int>(px, py, pz)
+                    let d = (SIMD3<Float>(p) - center) / radius
+                    if (d * d).sum() <= 1, let key = color(p) { self[p] = key }
+                }
+            }
+        }
+    }
+
+    mutating func cylinder(_ key: Character, center: SIMD2<Float>, y: ClosedRange<Int>, radius: Float) {
+        cylinder(center: center, y: y, radius: { _ in radius }) { _ in key }
+    }
+
+    mutating func cylinder(center: SIMD2<Float>, y: ClosedRange<Int>, radius: (Int) -> Float, color: (SIMD3<Int>) -> Character?) {
+        for py in y {
+            let r = radius(py)
+            for px in 0..<size.x {
+                for pz in 0..<size.z {
+                    let d = SIMD2<Float>(Float(px), Float(pz)) - center
+                    let p = SIMD3<Int>(px, py, pz)
+                    if (d * d).sum() <= r * r, let key = color(p) { self[p] = key }
+                }
+            }
+        }
     }
 
     func mesh(atlas: Atlas) -> MeshBuilder {

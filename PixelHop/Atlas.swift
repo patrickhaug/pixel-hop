@@ -3,7 +3,7 @@ import UIKit
 struct Atlas {
     static let shared = Atlas()
 
-    private static let cell = 12
+    private static let cell = Textures.size + 2
     private static let shades = Face.allCases.count
 
     let image: UIImage
@@ -12,7 +12,7 @@ struct Atlas {
 
     private init() {
         let solid = Palette.colors.keys.sorted().map { key in
-            ("color-\(key)", Array(repeating: String(repeating: key, count: 10), count: 10))
+            ("color-\(key)", Array(repeating: String(repeating: key, count: Textures.size), count: Textures.size))
         }
         let list = Textures.all.sorted { $0.key < $1.key }.map { ($0.key, $0.value) } + solid
         entries = Dictionary(uniqueKeysWithValues: list.enumerated().map { ($1.0, $0) })
