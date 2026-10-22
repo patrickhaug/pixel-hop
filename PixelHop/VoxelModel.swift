@@ -16,11 +16,7 @@ struct VoxelModel {
     }
 
     static func noise(_ p: SIMD3<Int>) -> Int {
-        var hash: UInt32 = 2_166_136_261
-        for value in [p.x, p.y, p.z] {
-            hash = (hash ^ UInt32(truncatingIfNeeded: value)) &* 16_777_619
-        }
-        return Int(hash)
+        Int(Hash.value(p.x, p.y, p.z))
     }
 
     mutating func box(_ key: Character, x: ClosedRange<Int>, y: ClosedRange<Int>, z: ClosedRange<Int>) {
@@ -74,23 +70,55 @@ struct VoxelModel {
     func mesh(atlas: Atlas) -> MeshBuilder {
         var builder = MeshBuilder()
         let pivot = SIMD3<Float>(Float(size.x) / 2, 0, Float(size.z) / 2)
-        for px in 0..<size.x {
-            for py in 0..<size.y {
-                for pz in 0..<size.z {
-                    let p = SIMD3<Int>(px, py, pz)
-                    guard let key = self[p] else { continue }
-                    for face in Face.allCases where self[p &+ face.offset] == nil {
-                        let uv = atlas.uv(key, face: face)
-                        builder.quad(
-                            face.corners.map { (SIMD3<Float>(p) + $0 - pivot) * Self.voxelSize },
-                            normal: face.normal,
-                            uvs: Array(repeating: uv, count: 4)
-                        )
+        for face in Face.allCases {
+            let (n, u, v) = face.axes
+            for layer in 0..<size[n] {
+                var mask = exposed(face, layer: layer)
+                for b in 0..<size[v] {
+                    var a = 0
+                    while a < size[u] {
+                        guard let key = mask[a + b * size[u]] else {
+                            a += 1
+                            continue
+                        }
+                        var width = 1
+                        while a + width < size[u], mask[a + width + b * size[u]] == key { width += 1 }
+                        var height = 1
+                        while b + height < size[v], (0..<width).allSatisfy({ mask[a + $0 + (b + height) * size[u]] == key }) {
+                            height += 1
+                        }
+                        for dv in 0..<height {
+                            for du in 0..<width { mask[a + du + (b + dv) * size[u]] = nil }
+                        }
+                        let corners = face.corners.map { corner in
+                            var p = SIMD3<Float>.zero
+                            p[n] = Float(layer) + corner[n]
+                            p[u] = Float(a) + corner[u] * Float(width)
+                            p[v] = Float(b) + corner[v] * Float(height)
+                            return (p - pivot) * Self.voxelSize
+                        }
+                        builder.quad(corners, normal: face.normal, uvs: Array(repeating: atlas.uv(key, face: face), count: 4))
+                        a += width
                     }
                 }
             }
         }
         return builder
+    }
+
+    private func exposed(_ face: Face, layer: Int) -> [Character?] {
+        let (n, u, v) = face.axes
+        var mask = [Character?](repeating: nil, count: size[u] * size[v])
+        for b in 0..<size[v] {
+            for a in 0..<size[u] {
+                var p = SIMD3<Int>.zero
+                p[n] = layer
+                p[u] = a
+                p[v] = b
+                if let key = self[p], self[p &+ face.offset] == nil { mask[a + b * size[u]] = key }
+            }
+        }
+        return mask
     }
 
     private func contains(_ p: SIMD3<Int>) -> Bool {

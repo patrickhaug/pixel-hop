@@ -40,7 +40,7 @@ jobs:
             -derivedDataPath "$RUNNER_TEMP/build" \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Screenshot
+      - name: Screenshots
         continue-on-error: true
         env:
           UDID: ${{ steps.sim.outputs.udid }}
@@ -48,20 +48,27 @@ jobs:
           xcrun simctl boot "$UDID"
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" "$RUNNER_TEMP/build/Build/Products/Debug-iphonesimulator/PixelHop.app"
-          xcrun simctl launch "$UDID" dev.patrickhaug.pixelhop
-          sleep 20
-          xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/screenshot.png"
-          sips -s format jpeg -s formatOptions 60 -Z 640 "$RUNNER_TEMP/screenshot.png" --out "$RUNNER_TEMP/screenshot.jpg"
-          echo "SCREENSHOT-BEGIN"
-          base64 -b 76 -i "$RUNNER_TEMP/screenshot.jpg"
-          echo "SCREENSHOT-END"
-          xcrun simctl spawn "$UDID" log show --last 2m --style compact --predicate 'process == "PixelHop"' | tail -n 60
+          shoot() {
+            name="$1"
+            shift
+            xcrun simctl launch "$UDID" dev.patrickhaug.pixelhop "$@"
+            sleep 20
+            xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/$name.png"
+            sips -s format jpeg -s formatOptions 60 -Z 640 "$RUNNER_TEMP/$name.png" --out "$RUNNER_TEMP/$name.jpg"
+            echo "SCREENSHOT-BEGIN $name"
+            base64 -b 76 -i "$RUNNER_TEMP/$name.jpg"
+            echo "SCREENSHOT-END $name"
+            xcrun simctl terminate "$UDID" dev.patrickhaug.pixelhop
+          }
+          shoot start
+          shoot village -screenshotStart 3.5,-55.5
+          xcrun simctl spawn "$UDID" log show --last 3m --style compact --predicate 'process == "PixelHop"' | tail -n 60
 
       - name: Upload screenshot
         if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: screenshot
-          path: ${{ runner.temp }}/screenshot.png
+          name: screenshots
+          path: ${{ runner.temp }}/*.png
           if-no-files-found: ignore

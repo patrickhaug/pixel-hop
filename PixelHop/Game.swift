@@ -35,14 +35,14 @@ final class Game {
     private let body = Entity()
     private let camera = PerspectiveCamera()
     @ObservationIgnored private var clock: FrameClock?
-    @ObservationIgnored private var coinEntities: [Entity] = []
+    @ObservationIgnored private var chunks: Chunks?
     @ObservationIgnored private var flying: [Flying] = []
     @ObservationIgnored private var facing = Direction.down
     @ObservationIgnored private var time: Float = 0
     @ObservationIgnored private var hopTime: Float = 0
 
     private let walkSpeed: Float = 3.2
-    private let cameraOffset: SIMD3<Float> = [0, 7.5, 8]
+    private let cameraOffset: SIMD3<Float> = [0, 10, 10.5]
 
     private struct Flying {
         let entity: Entity
@@ -52,27 +52,13 @@ final class Game {
     func makeWorld() async throws -> Entity {
         let atlas = Atlas.shared
         let material = try await Scenery.pixelMaterial(atlas.image)
-        root.addChild(ModelEntity(mesh: try Terrain.mesh(atlas: atlas).resource(named: "terrain"), materials: [material]))
-        for (key, prop) in Models.props {
-            let entity = ModelEntity(mesh: try prop.model.mesh(atlas: atlas).resource(named: "prop-\(key)"), materials: [material])
-            for center in WorldMap.placements(of: key, footprint: prop.footprint) {
-                let copy = entity.clone(recursive: true)
-                copy.position = [center.x, Block.of(key).height, center.y]
-                root.addChild(copy)
-            }
-        }
-        let coin = ModelEntity(mesh: try Models.coin.mesh(atlas: atlas).resource(named: "coin"), materials: [material])
-        for center in "Ccds".flatMap({ WorldMap.centers(of: $0) }) {
-            let copy = coin.clone(recursive: true)
-            copy.position = [center.x, WorldMap.height(center) + 0.2, center.y]
-            root.addChild(copy)
-            coinEntities.append(copy)
-        }
+        let chunks = try Chunks(root: root, atlas: atlas, material: material)
+        try chunks.update(around: Self.start, budget: .max)
+        self.chunks = chunks
         body.addChild(ModelEntity(mesh: try Models.hopper.mesh(atlas: atlas).resource(named: "hopper"), materials: [material]))
         hopper.addChild(try Scenery.shadow())
         hopper.addChild(body)
-        let start = WorldMap.centers(of: "@").first ?? [1.5, 1.5]
-        move(to: start)
+        move(to: Self.start)
         root.addChild(hopper)
         camera.camera.fieldOfViewInDegrees = 40
         camera.camera.far = 300
@@ -83,6 +69,11 @@ final class Game {
         clock = FrameClock { [weak self] dt in self?.step(dt) }
         clock?.start()
         return root
+    }
+
+    private static var start: SIMD2<Float> {
+        let parts = UserDefaults.standard.string(forKey: "screenshotStart")?.split(separator: ",").compactMap { Float($0) } ?? []
+        return parts.count == 2 ? SIMD2<Float>(parts[0], parts[1]) : WorldMap.start
     }
 
     private func step(_ dt: Float) {
@@ -97,6 +88,7 @@ final class Game {
         body.position.y = abs(sin(hopTime * 10)) * 0.25
         body.orientation = simd_slerp(body.orientation, simd_quatf(angle: facing.yaw, axis: [0, 1, 0]), min(1, dt * 14))
         follow()
+        try? chunks?.update(around: SIMD2<Float>(hopper.position.x, hopper.position.z), budget: 2)
         updateCoins(dt)
     }
 
@@ -132,17 +124,13 @@ final class Game {
     private func updateCoins(_ dt: Float) {
         let spin = simd_quatf(angle: time * 2.5, axis: [0, 1, 0])
         let reach = SIMD2<Float>(hopper.position.x, hopper.position.z)
-        var remaining: [Entity] = []
-        for coin in coinEntities {
+        for (tile, coin) in chunks?.coins ?? [:] {
             coin.orientation = spin
-            coin.position.y = WorldMap.height(SIMD2<Float>(coin.position.x, coin.position.z)) + 0.2 + sin(time * 3) * 0.06
-            if simd_distance(SIMD2<Float>(coin.position.x, coin.position.z), reach) < 0.55 {
-                collect(coin)
-            } else {
-                remaining.append(coin)
+            coin.position.y = WorldMap.height(SIMD2<Float>(tile) + 0.5) + 0.2 + sin(time * 3) * 0.06
+            if simd_distance(SIMD2<Float>(tile) + 0.5, reach) < 0.55, let collected = chunks?.collect(tile) {
+                collect(collected)
             }
         }
-        coinEntities = remaining
         flying = flying.compactMap { item in
             var item = item
             item.age += dt

@@ -31,6 +31,14 @@ enum Face: Int, CaseIterable {
         }
     }
 
+    var axes: (normal: Int, u: Int, v: Int) {
+        switch self {
+        case .top, .bottom: (1, 0, 2)
+        case .south, .north: (2, 0, 1)
+        case .west, .east: (0, 2, 1)
+        }
+    }
+
     var corners: [SIMD3<Float>] {
         switch self {
         case .top: [[0, 1, 1], [0, 1, 0], [1, 1, 0], [1, 1, 1]]
