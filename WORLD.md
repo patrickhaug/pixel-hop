@@ -142,15 +142,25 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
   - Das Textfeld schließt sich beim Antippen, nach 6 Sekunden oder wenn Hopper weggeht.
 - Alle Texte sind kurz und auf Deutsch. Die Tiere sind **ironisch**: Sie tun cool, angeben oder gelangweilt und verraten sich dabei selbst („Ich bin der schlauste Fuchs der Welt. Hab mich heute nur dreimal verlaufen.“). Nie gemein zu Hopper, nie unheimlich.
 
-## Aufträge und Grummel (`Adventure.swift`, `Quest.swift`, `Grummels.swift`)
+## Aufträge und Grummel (`Adventure.swift`, `Quest.swift`, `QuestSite.swift`, `Grummels.swift`)
 
-- **Wer fragt**: Alle Bewohner der Heimatinsel und jeder dritte Bewohner draußen (Hash) haben einen Auftrag. Beim ersten Gespräch ohne laufenden Auftrag bitten sie Hopper, ihr Fundstück (`Species.errand`, Modelle in `Loot.swift`) von den Grummeln zurückzuholen. Es gibt immer nur einen Auftrag gleichzeitig, und jeder Bewohner fragt nur einmal.
-- **Wo**: Das Fundstück liegt 22–35 Kacheln vom Bewohner entfernt (Richtung und Abstand aus dem Hash). Der Ort muss begehbar sein, und auf der geraden Linie dorthin darf außerhalb der Heimatinsel kein Wasser und keine Wand über 0,8 liegen.
-- **Grummel**: Lila Stachel-Monster mit bösem Blick. Bis zu 4 bewachen das Fundstück, je 2–2,5 Kacheln daneben. Ist Hopper näher als 6 Kacheln und weniger als 10 Kacheln von ihrem Platz weg, jagen sie ihn mit 2,1 Kacheln pro Sekunde (Hopper ist mit 3,2 schneller). Sonst hüpfen sie zurück auf ihren Platz.
-- **Herzen**: Hopper hat 3 Herzen (oben links unter den Münzen). Berührt ihn ein Grummel, verliert er ein Herz, wird weggestoßen, der Bildschirm blitzt rot und er blinkt 1,6 Sekunden lang. In der Zeit jagen ihn die Grummel nicht.
-- **Ohnmacht**: Bei 0 Herzen wacht Hopper zu Hause am Start mit vollen Herzen auf. Das Fundstück liegt dann wieder bei den Grummeln.
-- **Pfeil**: Oben in der Mitte steht, was gesucht wird, und ein Pfeil zeigt dorthin. Nach dem Finden zeigt er zurück zum Bewohner.
-- **Belohnung**: Bringt Hopper das Fundstück zurück, gibt es 5 Münzen und die Grummel verschwinden.
+- **Wer fragt**: Alle Bewohner der Heimatinsel und jeder dritte Bewohner draußen (Hash). Jeder von ihnen hat **vier Aufträge nacheinander**, immer in dieser Reihenfolge. Es läuft immer nur ein Auftrag gleichzeitig.
+
+| Nr. | Art | Was Hopper tun muss | Banner oben |
+|---|---|---|---|
+| 1 | Holen | das Fundstück der Art (`Species.errand`, Modelle in `Loot.swift`) bei den Grummeln abholen, 4 Wächter | „Gesucht: Knochen“ |
+| 2 | Retten | das Tierbaby (`Species.baby`, das Modell der Art in klein) abholen. Es hüpft Hopper danach hinterher. 4 Wächter | „Rette: Küken“ |
+| 3 | Sammeln | 3 Glitzersteine an 3 verschiedenen Orten, je 2 Wächter | „Glitzersteine: 1/3“ |
+| 4 | Verjagen | 3 Grummel im Lager plattmachen, indem Hopper aus dem Flug auf ihnen landet. 5 Grummel im Lager | „Grummel verjagt: 1/3“ |
+
+- **Wo**: Jeder Ort liegt 22–35 Kacheln vom Bewohner entfernt (Richtung und Abstand aus dem Hash, gemischt mit der Nummer des Auftrags). Sammelorte liegen mindestens 8 Kacheln auseinander. Jeder Ort muss begehbar sein, und auf der geraden Linie dorthin darf außerhalb der Heimatinsel kein Wasser und keine Wand über 0,8 liegen.
+- **Aufheben** geht nur am Boden oder knapp darüber (unter 1,4 Höhe). Wer drüberfliegt, muss also landen.
+- **Grummel**: Lila Stachel-Monster mit bösem Blick, 2–2,5 Kacheln neben jedem Ort. Ist Hopper näher als 6 Kacheln und weniger als 10 Kacheln von ihrem Platz weg, jagen sie ihn mit 2,1 Kacheln pro Sekunde (Hopper ist mit 3,2 schneller). Sonst hüpfen sie zurück auf ihren Platz.
+- **Plattmachen**: Sinkt Hopper zwischen 0,25 und 1,4 Höhe durch die Luft (zum Beispiel beim Landen) und ist dabei näher als 0,8 an einem Grummel, wird der Grummel flachgedrückt und verschwindet. Das geht bei jedem Auftrag.
+- **Herzen**: Hopper hat 3 Herzen (oben links unter den Münzen). Berührt ihn ein Grummel am Boden, verliert er ein Herz, wird weggestoßen, der Bildschirm blitzt rot und er blinkt 1,6 Sekunden lang. In der Zeit jagen ihn die Grummel nicht.
+- **Ohnmacht**: Bei 0 Herzen wacht Hopper zu Hause am Start mit vollen Herzen auf. Alles Gefundene liegt dann wieder an seinem Ort, plattgemachte Grummel bleiben weg.
+- **Pfeil**: Oben in der Mitte steht der Auftrag, und ein Pfeil zeigt zum nächsten offenen Ort. Ist alles erledigt, zeigt er zurück zum Bewohner.
+- **Belohnung**: Ist der Auftrag erledigt und Hopper redet mit dem Bewohner, gibt es 5 Münzen und die Grummel verschwinden.
 
 ## Superkraft Fliegen (`Flight.swift`)
 
@@ -197,6 +207,7 @@ Alles bewegt sich nur, wenn es in Hoppers Nähe ist. Ort und Takt kommen aus dem
 | Abheben | Zisch nach oben | mittel |
 | Flügelschlag | leises Flattern | ganz leicht |
 | Landen | dumpfer Plumps | weich |
+| Grummel plattgemacht | Boing | stark |
 
 ## Kamera
 
