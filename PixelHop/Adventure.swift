@@ -9,6 +9,7 @@ final class Adventure {
     private(set) var arrow: Double = 0
     private(set) var flash: Double = 0
     @ObservationIgnored private(set) var safe: Float = 0
+    @ObservationIgnored private(set) var danger = Float.infinity
     @ObservationIgnored var practice = false
     @ObservationIgnored private var quest: Quest?
     @ObservationIgnored private var site: QuestSite?
@@ -33,12 +34,12 @@ final class Adventure {
         self.material = material
     }
 
-    func talk(to resident: Resident) -> (text: String, reward: Int)? {
+    func talk(to resident: Resident) -> (text: String, reward: Int, cue: Cue)? {
         if let current = quest, current.giver == resident.tile {
             resident.hop()
-            guard current.found else { return (current.errand.waiting, 0) }
+            guard current.found else { return (current.errand.waiting, 0, Cue.talk) }
             finish()
-            return (current.errand.thanks, 5)
+            return (current.errand.thanks, 5, Cue.reward)
         }
         let errand = resident.species.errand
         guard quest == nil, resident.offersErrand, !finished.contains(resident.tile),
@@ -49,13 +50,17 @@ final class Adventure {
         quest = started
         self.site = site
         label = started.label
-        return (errand.ask, 0)
+        return (errand.ask, 0, Cue.quest)
     }
 
     func update(_ dt: Float, time: Float, hopper: SIMD2<Float>) -> Event? {
         safe = max(0, safe - dt)
         if flash > 0 { flash = max(0, flash - Double(dt) * 2.5) }
-        guard var current = quest, let site else { return nil }
+        guard var current = quest, let site else {
+            danger = .infinity
+            return nil
+        }
+        danger = safe > 0 ? .infinity : site.nearest(to: hopper)
         let way = current.goal - hopper
         let angle = (Double(atan2(way.x, -way.y)) * 180 / .pi / 10).rounded() * 10
         if angle != arrow { arrow = angle }

@@ -164,6 +164,28 @@ Alles bewegt sich nur, wenn es in Hoppers Nähe ist. Ort und Takt kommen aus dem
 - **Glitzern**: Auf 4 % der Wasserkacheln blitzt ab und zu ein Lichtfunke auf.
 - **Fische**: Alle 2–5 Sekunden springt in Hoppers Nähe ein Fisch im Bogen aus dem Wasser, mit Spritzern beim Ein- und Auftauchen.
 
+## Töne und Vibration (`Cue.swift`, `Sounds.swift`)
+
+- Jedes Ereignis ist ein `Cue`: Er spielt einen Ton und lässt das Handy passend vibrieren. Neue Ereignisse bekommen einen neuen Fall in `Cue`, nicht eigene Ton- oder Vibrationsaufrufe.
+- Die Töne liegen als kurze WAV-Dateien (Mono, 22 kHz) in `PixelHop/Sounds/`. Sie stammen von **Kenney (kenney.nl), Lizenz CC0** (gemeinfrei), aus den Paketen *Impact Sounds*, *Interface Sounds*, *Digital Audio*, *RPG Audio* und *Music Jingles*. Neue Töne nur mit freier Lizenz (CC0) und mit Quelle hier eintragen.
+- Die Audio-Sitzung ist `ambient`: Der Stummschalter am iPhone macht das Spiel leise, und Musik aus anderen Apps läuft weiter.
+
+| Ereignis | Ton | Vibration |
+|---|---|---|
+| Hüpfer beim Laufen | Schritt auf Gras, Pflaster, Holz, Sand oder Schnee (3 Varianten, leise) | – |
+| Stufe hoch oder runter | – | leicht |
+| Steuerkreuz neue Richtung | – | Klick |
+| Münze | Pling | weich |
+| Reden | kurzes Frage-Piepen | Klick |
+| Geschenk | Münzgeklimper | Erfolg |
+| Auftrag annehmen | 8-Bit-Melodie aufwärts | mittel |
+| Fundstück gefunden | 8-Bit-Melodie aufwärts | Erfolg |
+| Auftrag erledigt | 8-Bit-Fanfare und Münzgeklimper | Erfolg |
+| Grummel-Treffer | Schlag | stark und Fehler |
+| Ohnmacht | 8-Bit-Melodie abwärts | Fehler |
+| Grummel näher als 3 Kacheln | – | Herzschlag, je näher desto schneller |
+| Fisch springt | Platschen | – |
+
 ## Kamera
 
 - Die Kamera schaut immer schräg von oben nach Norden und folgt Hopper mit festem Abstand (0, 10, 10,5). Das Sichtfeld beträgt 40°.

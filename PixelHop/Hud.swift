@@ -126,6 +126,7 @@ struct DPad: View {
 
     private func update(_ direction: Direction?) {
         guard direction != pressed else { return }
+        if direction != nil { Cue.steer.play() }
         pressed = direction
         steer(direction)
     }
