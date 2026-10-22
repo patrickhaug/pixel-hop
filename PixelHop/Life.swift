@@ -138,8 +138,8 @@ final class Life {
             entity.scale = SIMD3<Float>(repeating: max(0.01, sharp * sharp))
         case .smoke:
             let u = (t / 3).truncatingRemainder(dividingBy: 1)
-            entity.position = mover.base + SIMD3<Float>(u * 0.35, u * 1.6, 0)
-            entity.scale = SIMD3<Float>(repeating: max(0.01, sin(u * .pi) * (0.5 + u)))
+            entity.position = mover.base + SIMD3<Float>(u * 0.3, u * 1.1, 0)
+            entity.scale = SIMD3<Float>(repeating: max(0.01, sin(u * .pi) * (0.3 + u * 0.4)))
         }
     }
 

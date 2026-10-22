@@ -25,7 +25,7 @@ enum Critters {
     }
 
     static let puff = VoxelModel(size: [5, 5, 5]) { m in
-        m.ball(center: [2, 2, 2], radius: [2.4, 2.4, 2.4]) { p in VoxelModel.noise(p) % 4 == 0 ? "x" : "w" }
+        m.ball(center: [2, 2, 2], radius: [2.4, 2.4, 2.4]) { p in VoxelModel.noise(p) % 3 == 0 ? "w" : "x" }
     }
 
     static let glint = VoxelModel(size: [5, 1, 5]) { m in

@@ -148,7 +148,7 @@ Alles bewegt sich nur, wenn es in Hoppers Nähe ist. Ort und Takt kommen aus dem
 
 - **Bäume und Palmen** wiegen sich im Wind (±0,04 rad).
 - **Boote** schaukeln auf dem Wasser.
-- **Schornsteine** jedes Hauses rauchen: drei Wölkchen steigen nacheinander auf, wachsen und verschwinden.
+- **Schornsteine** jedes Hauses rauchen: drei kleine graue Wölkchen steigen nacheinander 1,1 hoch, wachsen und verschwinden.
 - **Schmetterlinge** flattern über 15 % der Blumenkacheln.
 - **Möwen**: In 40 % der Chunks kreisen zwei Möwen 4,5 über dem Boden.
 - **Glitzern**: Auf 4 % der Wasserkacheln blitzt ab und zu ein Lichtfunke auf.
