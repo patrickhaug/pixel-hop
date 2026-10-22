@@ -19,6 +19,41 @@ struct CoinCounter: View {
     }
 }
 
+struct TalkButton: View {
+    let action: () -> Void
+    private static let icon = PixelArt.image(Icons.bubble)
+
+    var body: some View {
+        Button(action: action) {
+            Image(uiImage: Self.icon)
+                .interpolation(.none)
+                .resizable()
+                .frame(width: 96, height: 72)
+        }
+        .accessibilityLabel("Reden")
+    }
+}
+
+struct DialogBox: View {
+    let dialog: Game.Dialog
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(dialog.title)
+                .font(.system(size: 18, weight: .heavy, design: .rounded))
+                .foregroundStyle(Color(red: 1, green: 0.8, blue: 0.46))
+            Text(dialog.text)
+                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(maxWidth: 480, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color(red: 0.16, green: 0.21, blue: 0.44).opacity(0.92)))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(.white, lineWidth: 3))
+    }
+}
+
 struct DPad: View {
     let steer: (Direction?) -> Void
     @State private var pressed: Direction?

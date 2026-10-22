@@ -97,7 +97,7 @@ enum WorldMap {
         }
     }
 
-    private static func isHome(_ column: Int, _ row: Int) -> Bool {
+    static func isHome(_ column: Int, _ row: Int) -> Bool {
         column >= 0 && row >= 0 && column < homeSize.x && row < homeSize.y
     }
 
