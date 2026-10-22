@@ -14,14 +14,54 @@ permissions:
 jobs:
   build:
     runs-on: macos-26
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - run: xcodebuild -version
+
+      - name: Pick simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          phones = [d for runtime in sorted(devices, reverse=True) if ".iOS-" in runtime for d in devices[runtime] if d["name"].startswith("iPhone")]
+          print(phones[0]["udid"])
+          ')
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices | grep "$UDID"
+
       - name: Build for simulator
         run: |
           xcodebuild build \
             -project PixelHop.xcodeproj \
             -scheme PixelHop \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath "$RUNNER_TEMP/build" \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Screenshot
+        continue-on-error: true
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
+        run: |
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$RUNNER_TEMP/build/Build/Products/Debug-iphonesimulator/PixelHop.app"
+          xcrun simctl launch "$UDID" dev.patrickhaug.pixelhop
+          sleep 20
+          xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/screenshot.png"
+          sips -s format jpeg -s formatOptions 60 -Z 640 "$RUNNER_TEMP/screenshot.png" --out "$RUNNER_TEMP/screenshot.jpg"
+          echo "SCREENSHOT-BEGIN"
+          base64 -b 76 -i "$RUNNER_TEMP/screenshot.jpg"
+          echo "SCREENSHOT-END"
+          xcrun simctl spawn "$UDID" log show --last 2m --style compact --predicate 'process == "PixelHop"' | tail -n 60
+
+      - name: Upload screenshot
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot
+          path: ${{ runner.temp }}/screenshot.png
+          if-no-files-found: ignore
