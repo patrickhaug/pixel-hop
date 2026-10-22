@@ -44,7 +44,6 @@ final class Game {
     @ObservationIgnored private var hopTime: Float = 0
     @ObservationIgnored private var partner: Resident?
     @ObservationIgnored private var dialogAge: Float = 0
-    @ObservationIgnored private var screenshotTalkDone = false
 
     private let walkSpeed: Float = 3.2
     private let cameraOffset: SIMD3<Float> = [0, 10, 10.5]
@@ -103,8 +102,7 @@ final class Game {
         try? chunks?.update(around: SIMD2<Float>(hopper.position.x, hopper.position.z), budget: 2)
         updateCoins(dt)
         updateResidents(dt)
-        if Self.screenshotTalk, !screenshotTalkDone, time > 17 {
-            screenshotTalkDone = true
+        if Self.screenshotTalk, time > 17, dialog == nil {
             talk()
         }
     }
