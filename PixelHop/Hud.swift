@@ -19,6 +19,46 @@ struct CoinCounter: View {
     }
 }
 
+struct Hearts: View {
+    let count: Int
+    private static let full = PixelArt.image(Icons.heart)
+    private static let empty = PixelArt.image(Icons.emptyHeart)
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<Adventure.maxHearts, id: \.self) { index in
+                Image(uiImage: index < count ? Self.full : Self.empty)
+                    .interpolation(.none)
+                    .resizable()
+                    .frame(width: 27, height: 24)
+            }
+        }
+    }
+}
+
+struct QuestBanner: View {
+    let label: String
+    let arrow: Double
+    private static let icon = PixelArt.image(Icons.arrow)
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(uiImage: Self.icon)
+                .interpolation(.none)
+                .resizable()
+                .frame(width: 27, height: 27)
+                .rotationEffect(.degrees(arrow))
+            Text(label)
+                .font(.system(size: 17, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color(red: 0.16, green: 0.21, blue: 0.44).opacity(0.92)))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(.white, lineWidth: 3))
+    }
+}
+
 struct TalkButton: View {
     let action: () -> Void
     private static let icon = PixelArt.image(Icons.bubble)

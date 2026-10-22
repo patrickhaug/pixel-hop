@@ -5,6 +5,8 @@ import simd
 final class Resident {
     let species: Species
     let name: String
+    let tile: SIMD2<Int>
+    let offersErrand: Bool
     let entity = Entity()
     private let body: Entity
     private let home: SIMD2<Float>
@@ -18,10 +20,12 @@ final class Resident {
     var title: String { "\(species.kind) \(name)" }
     var position: SIMD2<Float> { [entity.position.x, entity.position.z] }
 
-    init(species: Species, model: ModelEntity, home: SIMD2<Float>, seed: Int) {
+    init(species: Species, model: ModelEntity, tile: SIMD2<Int>, seed: Int) {
         self.species = species
+        self.tile = tile
         name = species.names[seed % species.names.count]
-        self.home = home
+        offersErrand = WorldMap.isHome(tile.x, tile.y) || seed % 3 == 0
+        home = SIMD2<Float>(tile) + 0.5
         target = home
         wait = Float(seed % 30) / 10
         line = seed % species.lines.count
@@ -65,8 +69,12 @@ final class Resident {
         face(offset, dt: dt)
     }
 
-    func talk() -> (text: String, gift: Bool) {
+    func hop() {
         cheer = 0.8
+    }
+
+    func talk() -> (text: String, gift: Bool) {
+        hop()
         if species.gives && !gifted {
             gifted = true
             return (Species.gift, true)
@@ -114,7 +122,7 @@ final class Residents {
         var residents: [Resident] = []
         for (key, tile) in Self.spawns(in: chunk) {
             guard let species = Species.all[key], let model = models[key] else { continue }
-            let resident = Resident(species: species, model: model, home: SIMD2<Float>(tile) + 0.5, seed: Int(Hash.value(tile.x, tile.y, 13)))
+            let resident = Resident(species: species, model: model, tile: tile, seed: Int(Hash.value(tile.x, tile.y, 13)))
             parent.addChild(resident.entity)
             residents.append(resident)
         }

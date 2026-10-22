@@ -13,10 +13,25 @@ struct GameView: View {
                 }
             }
             .ignoresSafeArea()
+            if let adventure = game.adventure {
+                Color.red
+                    .opacity(adventure.flash * 0.35)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+            }
             VStack {
-                HStack {
-                    CoinCounter(count: game.coins)
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        CoinCounter(count: game.coins)
+                        if let adventure = game.adventure {
+                            Hearts(count: adventure.hearts)
+                        }
+                    }
                     Spacer()
+                    if let adventure = game.adventure, let label = adventure.label {
+                        QuestBanner(label: label, arrow: adventure.arrow)
+                        Spacer()
+                    }
                 }
                 Spacer()
                 HStack(alignment: .bottom) {
