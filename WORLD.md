@@ -117,14 +117,14 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
 
 - Bewohner sind Tiere aus Voxeln (`Animals.swift`), beschrieben als Arten in `Species.swift`:
 
-| Kürzel | Art | Namen | schenkt eine Münze |
-|---|---|---|---|
-| `k` | Katze | Mimi, Karl, Luna | ja |
-| `h` | Hund | Bello, Bruno, Rex | ja |
-| `c` | Huhn | Hilde, Gacki, Berta | nein |
-| `d` | Ente | Emma, Quaki, Paula | nein |
-| `f` | Fuchs | Fred, Flinki, Rosa | ja |
-| `q` | Frosch | Fritz, Quabbel, Kiki | nein |
+| Kürzel | Art | Namen | schenkt eine Münze | Fundstück im Auftrag |
+|---|---|---|---|---|
+| `k` | Katze | Mimi, Karl, Luna | ja | Wollknäuel |
+| `h` | Hund | Bello, Bruno, Rex | ja | Knochen |
+| `c` | Huhn | Hilde, Gacki, Berta | nein | Goldenes Ei |
+| `d` | Ente | Emma, Quaki, Paula | nein | Gummiente |
+| `f` | Fuchs | Fred, Flinki, Rosa | ja | Landkarte |
+| `q` | Frosch | Fritz, Quabbel, Kiki | nein | Krone |
 
 - **Wo sie wohnen** (`Residents.swift`): Auf der Heimatinsel gibt es 8 feste Bewohner (`Residents.home`), einer davon, der Hund, steht direkt neben dem Start bei (23, 18). Draußen entscheidet der Hash pro begehbarer Kachel:
   - auf Pflaster 1,2 %: Katze, Hund oder Huhn
@@ -138,9 +138,19 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
 - **Reden**:
   - Ist ein Bewohner in der Nähe, erscheint unten rechts die Sprechblase.
   - Tippt man darauf, hüpft der Bewohner vor Freude, und unten erscheint ein Textfeld mit Name und Satz. Bei jedem Gespräch kommt der nächste Satz.
-  - Katzen, Hunde und Füchse schenken beim ersten Gespräch eine Münze.
+  - Katzen, Hunde und Füchse schenken beim ersten normalen Gespräch (ohne Auftrag) eine Münze.
   - Das Textfeld schließt sich beim Antippen, nach 6 Sekunden oder wenn Hopper weggeht.
-- Alle Texte sind kurz, freundlich und auf Deutsch.
+- Alle Texte sind kurz und auf Deutsch. Die Tiere sind **ironisch**: Sie tun cool, angeben oder gelangweilt und verraten sich dabei selbst („Ich bin der schlauste Fuchs der Welt. Hab mich heute nur dreimal verlaufen.“). Nie gemein zu Hopper, nie unheimlich.
+
+## Aufträge und Grummel (`Adventure.swift`, `Quest.swift`, `Grummels.swift`)
+
+- **Wer fragt**: Alle Bewohner der Heimatinsel und jeder dritte Bewohner draußen (Hash) haben einen Auftrag. Beim ersten Gespräch ohne laufenden Auftrag bitten sie Hopper, ihr Fundstück (`Species.errand`, Modelle in `Loot.swift`) von den Grummeln zurückzuholen. Es gibt immer nur einen Auftrag gleichzeitig, und jeder Bewohner fragt nur einmal.
+- **Wo**: Das Fundstück liegt 22–35 Kacheln vom Bewohner entfernt (Richtung und Abstand aus dem Hash). Der Ort muss begehbar sein, und auf der geraden Linie dorthin darf außerhalb der Heimatinsel kein Wasser und keine Wand über 0,8 liegen.
+- **Grummel**: Lila Stachel-Monster mit bösem Blick. Bis zu 4 bewachen das Fundstück, je 2–2,5 Kacheln daneben. Ist Hopper näher als 6 Kacheln und weniger als 10 Kacheln von ihrem Platz weg, jagen sie ihn mit 2,1 Kacheln pro Sekunde (Hopper ist mit 3,2 schneller). Sonst hüpfen sie zurück auf ihren Platz.
+- **Herzen**: Hopper hat 3 Herzen (oben links unter den Münzen). Berührt ihn ein Grummel, verliert er ein Herz, wird weggestoßen, der Bildschirm blitzt rot und er blinkt 1,6 Sekunden lang. In der Zeit jagen ihn die Grummel nicht.
+- **Ohnmacht**: Bei 0 Herzen wacht Hopper zu Hause am Start mit vollen Herzen auf. Das Fundstück liegt dann wieder bei den Grummeln.
+- **Pfeil**: Oben in der Mitte steht, was gesucht wird, und ein Pfeil zeigt dorthin. Nach dem Finden zeigt er zurück zum Bewohner.
+- **Belohnung**: Bringt Hopper das Fundstück zurück, gibt es 5 Münzen und die Grummel verschwinden.
 
 ## Leben in der Welt (`Life.swift`)
 
@@ -167,4 +177,4 @@ Alles bewegt sich nur, wenn es in Hoppers Nähe ist. Ort und Takt kommen aus dem
 
 ## Prüfen ohne Mac
 
-- CI baut die App, startet sie im iPhone-Simulator und macht Screenshots. Die Bilder stehen im Log zwischen `SCREENSHOT-BEGIN <name>` und `SCREENSHOT-END <name>` als Base64-JPEG und zusätzlich als Artefakt `screenshots`: `start` zeigt die Heimatinsel, `talk` ein Gespräch mit dem Hund am Start (Startargument `-screenshotTalk YES`), `village` ein erzeugtes Dorf, `hills` einen Weg den Berg hinauf zum Schnee. Mit dem Startargument `-screenshotStart x,z` beginnt Hopper an einer anderen Stelle. Weil das iPhone im Hochformat bootet, liegt das Querformat-Spiel im Bild um 90° gedreht.
+- CI baut die App, startet sie im iPhone-Simulator und macht Screenshots. Die Bilder stehen im Log zwischen `SCREENSHOT-BEGIN <name>` und `SCREENSHOT-END <name>` als Base64-JPEG und zusätzlich als Artefakt `screenshots`: `start` zeigt die Heimatinsel, `talk` ein Gespräch mit dem Hund am Start (Startargument `-screenshotTalk YES`), `village` ein erzeugtes Dorf, `hills` einen Weg den Berg hinauf zum Schnee, `quest` Hopper bei den Grummeln des ersten Auftrags vom Hund (Startargument `-screenshotQuest YES`, dabei bleibt immer ein Herz übrig). Mit dem Startargument `-screenshotStart x,z` beginnt Hopper an einer anderen Stelle. Weil das iPhone im Hochformat bootet, liegt das Querformat-Spiel im Bild um 90° gedreht.

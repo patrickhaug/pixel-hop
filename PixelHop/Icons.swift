@@ -1,4 +1,38 @@
 enum Icons {
+    static let heart = [
+        ".kkk.kkk.",
+        "krwrkrrrk",
+        "krrrrrrrk",
+        "krrrrrrrk",
+        ".krrrrrk.",
+        "..krrrk..",
+        "...krk...",
+        "....k....",
+    ]
+
+    static let emptyHeart = [
+        ".kkk.kkk.",
+        "kmmmkmmmk",
+        "kmmmmmmmk",
+        "kmmmmmmmk",
+        ".kmmmmmk.",
+        "..kmmmk..",
+        "...kmk...",
+        "....k....",
+    ]
+
+    static let arrow = [
+        "....k....",
+        "...kyk...",
+        "..kyyyk..",
+        ".kyyyyyk.",
+        "kkkyyykkk",
+        "..kyyyk..",
+        "..kyyyk..",
+        "..kyyyk..",
+        "..kkkkk..",
+    ]
+
     static let coin = [
         ".oooo.",
         "oyyyyo",

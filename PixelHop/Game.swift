@@ -30,6 +30,7 @@ final class Game {
     private(set) var coins = UserDefaults.standard.integer(forKey: "coins")
     private(set) var nearby: String?
     private(set) var dialog: Dialog?
+    private(set) var adventure: Adventure?
     var heading: Direction?
 
     private let root = Entity()
@@ -44,6 +45,7 @@ final class Game {
     @ObservationIgnored private var hopTime: Float = 0
     @ObservationIgnored private var partner: Resident?
     @ObservationIgnored private var dialogAge: Float = 0
+    @ObservationIgnored private var knock = SIMD2<Float>.zero
 
     private let walkSpeed: Float = 3.2
     private let cameraOffset: SIMD3<Float> = [0, 10, 10.5]
@@ -64,6 +66,8 @@ final class Game {
         let chunks = try Chunks(root: root, atlas: atlas, material: material)
         try chunks.update(around: Self.start, budget: .max)
         self.chunks = chunks
+        adventure = Adventure(root: root, atlas: atlas, material: material)
+        adventure?.practice = Self.screenshotQuest
         body.addChild(ModelEntity(mesh: try Models.hopper.mesh(atlas: atlas).resource(named: "hopper"), materials: [material]))
         hopper.addChild(try Scenery.shadow())
         hopper.addChild(body)
@@ -82,6 +86,7 @@ final class Game {
     }
 
     private static let screenshotTalk = UserDefaults.standard.bool(forKey: "screenshotTalk")
+    private static let screenshotQuest = UserDefaults.standard.bool(forKey: "screenshotQuest")
 
     private static var start: SIMD2<Float> {
         let parts = UserDefaults.standard.string(forKey: "screenshotStart")?.split(separator: ",").compactMap { Float($0) } ?? []
@@ -105,22 +110,33 @@ final class Game {
         chunks?.life.update(time: time, dt: dt, around: hopper.position)
         updateCoins(dt)
         updateResidents(dt)
+        updateAdventure(dt)
         if Self.screenshotTalk, time > 17, dialog == nil {
             talk()
+        }
+        if Self.screenshotQuest, time > 1, adventure?.target == nil {
+            talk()
+            if let target = adventure?.target { travel(to: SIMD2<Float>(target) + [0.5, 4]) }
         }
     }
 
     func talk() {
         guard let resident = chunks?.residents.nearest(to: hopperPosition, within: 1.6) else { return }
-        let (text, gift) = resident.talk()
-        if gift {
-            coins += 1
+        let answer: (text: String, reward: Int)
+        if let errand = adventure?.talk(to: resident) {
+            answer = errand
+        } else {
+            let (line, gift) = resident.talk()
+            answer = (line, gift ? 1 : 0)
+        }
+        if answer.reward > 0 {
+            coins += answer.reward
             UserDefaults.standard.set(coins, forKey: "coins")
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         }
         partner = resident
         dialogAge = 0
-        dialog = Dialog(title: resident.title, text: text)
+        dialog = Dialog(title: resident.title, text: answer.text)
     }
 
     func closeDialog() {
@@ -142,6 +158,45 @@ final class Game {
         if dialogAge > 6 || simd_distance(partner?.position ?? hopperPosition, hopperPosition) > 2.5 {
             closeDialog()
         }
+    }
+
+    private func updateAdventure(_ dt: Float) {
+        guard let adventure else { return }
+        switch adventure.update(dt, time: time, hopper: hopperPosition) {
+        case .bitten(let grummel)?:
+            let away = hopperPosition - grummel
+            knock = simd_length(away) > 0.01 ? simd_normalize(away) * 7 : [0, 7]
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+        case .found(let item)?:
+            announce("Gefunden!", "Du hast: \(item). Jetzt schnell zurück, bevor die Grummel dich kriegen!")
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        case .fainted?:
+            travel(to: WorldMap.start)
+            announce("Autsch!", "Die Grummel haben dich erwischt. Du ruhst dich zu Hause aus. Das Fundstück liegt wieder bei ihnen.")
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+        case nil:
+            break
+        }
+        body.isEnabled = adventure.safe == 0 || Int(adventure.safe * 10) % 2 == 0
+        if simd_length(knock) > 0.05 {
+            let next = hopperPosition + knock * dt
+            if !Self.isBlocked(next, from: hopperPosition) { move(to: next) }
+            knock *= max(0, 1 - dt * 9)
+        }
+    }
+
+    private func announce(_ title: String, _ text: String) {
+        partner = nil
+        dialogAge = 0
+        dialog = Dialog(title: title, text: text)
+    }
+
+    private func travel(to point: SIMD2<Float>) {
+        knock = .zero
+        move(to: point)
+        hopper.position.y = WorldMap.height(point)
+        follow()
+        try? chunks?.update(around: point, budget: 8)
     }
 
     private func walk(_ direction: Direction, by step: Float) {
