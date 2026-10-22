@@ -3,6 +3,7 @@ import simd
 
 final class Chunks {
     private(set) var coins: [SIMD2<Int>: Entity] = [:]
+    let residents: Residents
     private let root: Entity
     private let atlas: Atlas
     private let material: UnlitMaterial
@@ -16,6 +17,7 @@ final class Chunks {
         self.atlas = atlas
         self.material = material
         coin = ModelEntity(mesh: try Models.coin.mesh(atlas: atlas).resource(named: "coin"), materials: [material])
+        residents = try Residents(atlas: atlas, material: material)
         for (key, prop) in Models.props {
             props[key] = ModelEntity(mesh: try prop.model.mesh(atlas: atlas).resource(named: "prop-\(key)"), materials: [material])
         }
@@ -75,12 +77,14 @@ final class Chunks {
             entity.addChild(copy)
             coins[tile] = copy
         }
+        residents.spawn(in: chunk, under: entity)
         root.addChild(entity)
         loaded[chunk] = entity
     }
 
     private func unload(_ chunk: SIMD2<Int>) {
         loaded.removeValue(forKey: chunk)?.removeFromParent()
+        residents.remove(chunk)
         coins = coins.filter { WorldMap.chunk(of: $0.key) != chunk }
     }
 }

@@ -10,6 +10,18 @@ enum Icons {
         ".oooo.",
     ]
 
+    static let bubble = [
+        "..kkkkkkkk..",
+        ".kwwwwwwwwk.",
+        "kwwwwwwwwwwk",
+        "kwwnwwnwwnwk",
+        "kwwwwwwwwwwk",
+        ".kwwwwwwwwk.",
+        "..kkwkkkkk..",
+        "...kwk......",
+        "...kk.......",
+    ]
+
     static let dpad = [
         ".......kkkkkkk.......",
         ".......kmmmmmk.......",

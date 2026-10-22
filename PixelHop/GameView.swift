@@ -19,9 +19,17 @@ struct GameView: View {
                     Spacer()
                 }
                 Spacer()
-                HStack {
+                HStack(alignment: .bottom) {
                     DPad { game.heading = $0 }
                     Spacer()
+                    if let dialog = game.dialog {
+                        DialogBox(dialog: dialog)
+                            .onTapGesture { game.closeDialog() }
+                        Spacer()
+                    }
+                    if game.nearby != nil && game.dialog == nil {
+                        TalkButton { game.talk() }
+                    }
                 }
             }
             .padding(24)

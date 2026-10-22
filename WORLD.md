@@ -90,6 +90,35 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
 - Beim Laufen hüpft er (Sinus, 0,25 hoch) und dreht sich weich in die Laufrichtung. Sein Schatten bleibt am Boden.
 - Er läuft 3,2 Blöcke pro Sekunde.
 
+## Bewohner
+
+- Bewohner sind Tiere aus Voxeln (`Animals.swift`), beschrieben als Arten in `Species.swift`:
+
+| Kürzel | Art | Namen | schenkt eine Münze |
+|---|---|---|---|
+| `k` | Katze | Mimi, Karl, Luna | ja |
+| `h` | Hund | Bello, Bruno, Rex | ja |
+| `c` | Huhn | Hilde, Gacki, Berta | nein |
+| `d` | Ente | Emma, Quaki, Paula | nein |
+| `f` | Fuchs | Fred, Flinki, Rosa | ja |
+| `q` | Frosch | Fritz, Quabbel, Kiki | nein |
+
+- **Wo sie wohnen** (`Residents.swift`): Auf der Heimatinsel gibt es 8 feste Bewohner (`Residents.home`), einer davon, der Hund, steht direkt neben dem Start bei (23, 18). Draußen entscheidet der Hash pro begehbarer Kachel:
+  - auf Pflaster 1,2 %: Katze, Hund oder Huhn
+  - auf Wiese, Blumen und Wegen 0,4 %: Fuchs, Frosch, Huhn oder Hund
+  - am Strand 1 %: Ente oder Frosch
+  - Name und erster Satz kommen ebenfalls aus dem Hash.
+- Bewohner gehören zu dem Chunk, in dem sie wohnen, und verschwinden mit ihm.
+- **Verhalten**:
+  - Sie laufen in einem Umkreis von 3 Kacheln um ihr Zuhause herum, warten zwischendurch 1–3 Sekunden und weichen blockierten Kacheln aus.
+  - Beim Laufen hüpfen sie ein wenig. Ist Hopper näher als 1,6 Kacheln, bleiben sie stehen und schauen ihn an.
+- **Reden**:
+  - Ist ein Bewohner in der Nähe, erscheint unten rechts die Sprechblase.
+  - Tippt man darauf, hüpft der Bewohner vor Freude, und unten erscheint ein Textfeld mit Name und Satz. Bei jedem Gespräch kommt der nächste Satz.
+  - Katzen, Hunde und Füchse schenken beim ersten Gespräch eine Münze.
+  - Das Textfeld schließt sich beim Antippen, nach 6 Sekunden oder wenn Hopper weggeht.
+- Alle Texte sind kurz, freundlich und auf Deutsch.
+
 ## Kamera
 
 - Die Kamera schaut immer schräg von oben nach Norden und folgt Hopper mit festem Abstand (0, 10, 10,5). Das Sichtfeld beträgt 40°.
@@ -103,4 +132,4 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
 
 ## Prüfen ohne Mac
 
-- CI baut die App, startet sie im iPhone-Simulator und macht Screenshots. Die Bilder stehen im Log zwischen `SCREENSHOT-BEGIN <name>` und `SCREENSHOT-END <name>` als Base64-JPEG und zusätzlich als Artefakt `screenshots`: `start` zeigt die Heimatinsel, `village` ein erzeugtes Dorf. Mit dem Startargument `-screenshotStart x,z` beginnt Hopper an einer anderen Stelle. Weil das iPhone im Hochformat bootet, liegt das Querformat-Spiel im Bild um 90° gedreht.
+- CI baut die App, startet sie im iPhone-Simulator und macht Screenshots. Die Bilder stehen im Log zwischen `SCREENSHOT-BEGIN <name>` und `SCREENSHOT-END <name>` als Base64-JPEG und zusätzlich als Artefakt `screenshots`: `start` zeigt die Heimatinsel, `talk` ein Gespräch mit dem Hund am Start (Startargument `-screenshotTalk YES`), `village` ein erzeugtes Dorf. Mit dem Startargument `-screenshotStart x,z` beginnt Hopper an einer anderen Stelle. Weil das iPhone im Hochformat bootet, liegt das Querformat-Spiel im Bild um 90° gedreht.

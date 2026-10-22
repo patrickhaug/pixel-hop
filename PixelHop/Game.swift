@@ -28,6 +28,8 @@ enum Direction {
 @Observable
 final class Game {
     private(set) var coins = UserDefaults.standard.integer(forKey: "coins")
+    private(set) var nearby: String?
+    private(set) var dialog: Dialog?
     var heading: Direction?
 
     private let root = Entity()
@@ -40,9 +42,16 @@ final class Game {
     @ObservationIgnored private var facing = Direction.down
     @ObservationIgnored private var time: Float = 0
     @ObservationIgnored private var hopTime: Float = 0
+    @ObservationIgnored private var partner: Resident?
+    @ObservationIgnored private var dialogAge: Float = 0
 
     private let walkSpeed: Float = 3.2
     private let cameraOffset: SIMD3<Float> = [0, 10, 10.5]
+
+    struct Dialog: Equatable {
+        let title: String
+        let text: String
+    }
 
     private struct Flying {
         let entity: Entity
@@ -71,6 +80,8 @@ final class Game {
         return root
     }
 
+    private static let screenshotTalk = UserDefaults.standard.bool(forKey: "screenshotTalk")
+
     private static var start: SIMD2<Float> {
         let parts = UserDefaults.standard.string(forKey: "screenshotStart")?.split(separator: ",").compactMap { Float($0) } ?? []
         return parts.count == 2 ? SIMD2<Float>(parts[0], parts[1]) : WorldMap.start
@@ -90,6 +101,44 @@ final class Game {
         follow()
         try? chunks?.update(around: SIMD2<Float>(hopper.position.x, hopper.position.z), budget: 2)
         updateCoins(dt)
+        updateResidents(dt)
+        if Self.screenshotTalk, time > 17, dialog == nil {
+            talk()
+        }
+    }
+
+    func talk() {
+        guard let resident = chunks?.residents.nearest(to: hopperPosition, within: 1.6) else { return }
+        let (text, gift) = resident.talk()
+        if gift {
+            coins += 1
+            UserDefaults.standard.set(coins, forKey: "coins")
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
+        partner = resident
+        dialogAge = 0
+        dialog = Dialog(title: resident.title, text: text)
+    }
+
+    func closeDialog() {
+        partner = nil
+        dialog = nil
+    }
+
+    private var hopperPosition: SIMD2<Float> {
+        SIMD2<Float>(hopper.position.x, hopper.position.z)
+    }
+
+    private func updateResidents(_ dt: Float) {
+        guard let residents = chunks?.residents else { return }
+        residents.update(dt, hopper: hopperPosition)
+        let title = residents.nearest(to: hopperPosition, within: 1.6)?.title
+        if title != nearby { nearby = title }
+        guard dialog != nil else { return }
+        dialogAge += dt
+        if dialogAge > 6 || simd_distance(partner?.position ?? hopperPosition, hopperPosition) > 2.5 {
+            closeDialog()
+        }
     }
 
     private func walk(_ direction: Direction, by step: Float) {
