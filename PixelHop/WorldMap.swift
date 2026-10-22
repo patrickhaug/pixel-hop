@@ -1,8 +1,4 @@
-import CoreGraphics
-
 enum WorldMap {
-    static let tileSize: CGFloat = 10
-
     static let rows = [
         "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
         "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
@@ -30,27 +26,22 @@ enum WorldMap {
         "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
     ]
 
-    static let size = CGSize(
-        width: CGFloat(grid[0].count) * tileSize,
-        height: CGFloat(grid.count) * tileSize
-    )
+    static let grid = rows.map { Array($0) }
 
-    private static let grid = rows.map { Array($0) }
-
-    static func isBlocked(_ point: CGPoint) -> Bool {
-        let column = Int((point.x / tileSize).rounded(.down))
-        let row = grid.count - 1 - Int((point.y / tileSize).rounded(.down))
-        guard grid.indices.contains(row), grid[row].indices.contains(column) else { return true }
-        return "T~R".contains(grid[row][column])
+    static func tile(_ column: Int, _ row: Int) -> Character? {
+        guard grid.indices.contains(row), grid[row].indices.contains(column) else { return nil }
+        return grid[row][column]
     }
 
-    static func centers(of key: Character) -> [CGPoint] {
+    static func isBlocked(_ point: SIMD2<Float>) -> Bool {
+        guard let key = tile(Int(point.x.rounded(.down)), Int(point.y.rounded(.down))) else { return true }
+        return Block.of(key).solid
+    }
+
+    static func centers(of key: Character) -> [SIMD2<Float>] {
         grid.enumerated().flatMap { row, tiles in
             tiles.enumerated().compactMap { column, tile in
-                tile == key ? CGPoint(
-                    x: (CGFloat(column) + 0.5) * tileSize,
-                    y: (CGFloat(grid.count - 1 - row) + 0.5) * tileSize
-                ) : nil
+                tile == key ? SIMD2<Float>(Float(column) + 0.5, Float(row) + 0.5) : nil
             }
         }
     }

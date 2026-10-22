@@ -1,6 +1,6 @@
 # Pixel Hop
 
-Retro pixel game for iPhone and iPad. Idea → Claude Code (cloud) → PR → merge → TestFlight.
+Retro voxel game for iPhone and iPad (RealityKit, pixel textures). World rules: `WORLD.md`. Idea → Claude Code (cloud) → PR → merge → TestFlight.
 
 ## One-time setup
 
