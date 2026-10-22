@@ -5,6 +5,7 @@ struct Species {
     let names: [String]
     let lines: [String]
     let gives: Bool
+    let baby: String
     let errand: Errand
 
     static let all: [Character: Species] = [
@@ -19,6 +20,7 @@ struct Species {
                 "Mäuse fangen? Nee. Dafür hab ich Personal.",
             ],
             gives: true,
+            baby: "Kätzchen",
             errand: Errand(
                 item: "Wollknäuel",
                 model: Loot.wool,
@@ -38,6 +40,7 @@ struct Species {
                 "Wollen wir um die Wette rennen? Ich lass dich gewinnen. Absichtlich. Ehrlich.",
             ],
             gives: true,
+            baby: "Hündchen",
             errand: Errand(
                 item: "Knochen",
                 model: Loot.bone,
@@ -57,6 +60,7 @@ struct Species {
                 "Ich kann fliegen! Ungefähr einen halben Meter.",
             ],
             gives: false,
+            baby: "Küken",
             errand: Errand(
                 item: "Goldenes Ei",
                 model: Loot.egg,
@@ -76,6 +80,7 @@ struct Species {
                 "Ich bin eine Ente, kein Schwan. Danke, dass du fragst.",
             ],
             gives: false,
+            baby: "Entchen",
             errand: Errand(
                 item: "Gummiente",
                 model: Loot.duck,
@@ -95,6 +100,7 @@ struct Species {
                 "Grummel? Gefährlich. Aber nicht so gefährlich wie ich. Glaub ich.",
             ],
             gives: true,
+            baby: "Füchslein",
             errand: Errand(
                 item: "Landkarte",
                 model: Loot.chart,
@@ -114,6 +120,7 @@ struct Species {
                 "Fliegen sind lecker. Willst du auch eine? Nein? Mehr für mich.",
             ],
             gives: false,
+            baby: "Fröschlein",
             errand: Errand(
                 item: "Krone",
                 model: Loot.crown,

@@ -1,4 +1,14 @@
 enum Loot {
+    static let gem = VoxelModel(size: [5, 7, 5]) { m in
+        for y in 0...6 {
+            let r = min(y, 6 - y, 2)
+            m.box(x: (2 - r)...(2 + r), y: y...y, z: (2 - r)...(2 + r)) { p in
+                if p.x == 2 - r && p.z == 2 + r { return "w" }
+                return (p.x + p.y) % 2 == 0 ? "c" : "j"
+            }
+        }
+    }
+
     static let wool = VoxelModel(size: [6, 6, 6]) { m in
         m.ball(center: [2.5, 2.5, 2.5], radius: [2.6, 2.6, 2.6]) { p in (p.x + p.y) % 3 == 0 ? "r" : "i" }
         m.box("i", x: 5...5, y: 0...0, z: 1...3)

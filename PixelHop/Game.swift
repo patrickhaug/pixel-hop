@@ -191,17 +191,20 @@ final class Game {
 
     private func updateAdventure(_ dt: Float) {
         guard let adventure else { return }
-        switch adventure.update(dt, time: time, hopper: hopperPosition, grounded: !(flight?.airborne ?? false)) {
+        switch adventure.update(dt, time: time, hopper: hopperPosition, altitude: flight?.altitude ?? 0) {
         case .bitten(let grummel)?:
             let away = hopperPosition - grummel
             knock = simd_length(away) > 0.01 ? simd_normalize(away) * 7 : [0, 7]
             Cue.hurt.play()
-        case .found(let item)?:
-            announce("Gefunden!", "Du hast: \(item). Jetzt schnell zurück, bevor die Grummel dich kriegen!")
+        case .found(let news)?:
+            if let news { announce("Gefunden!", news) }
             Cue.found.play()
+        case .squashed(let news)?:
+            if let news { announce("Pflatsch!", news) }
+            Cue.squash.play()
         case .fainted?:
             travel(to: WorldMap.start)
-            announce("Autsch!", "Die Grummel haben dich erwischt. Du ruhst dich zu Hause aus. Das Fundstück liegt wieder bei ihnen.")
+            announce("Autsch!", "Die Grummel haben dich erwischt. Du ruhst dich zu Hause aus. Was du gefunden hast, liegt wieder bei ihnen.")
             Cue.faint.play()
         case nil:
             break
