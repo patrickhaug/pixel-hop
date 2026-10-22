@@ -21,6 +21,13 @@ enum Palette {
         "u": UIColor(hex: 0x9a6340),
         "h": UIColor(hex: 0x6b4130),
         "i": UIColor(hex: 0xf5a3be),
+        "a": UIColor(hex: 0xe9d3a0),
+        "f": UIColor(hex: 0xc4a46b),
+        "q": UIColor(hex: 0x2fb6c8),
+        "j": UIColor(hex: 0x7fe3e6),
+        "v": UIColor(hex: 0x2396b0),
+        "x": UIColor(hex: 0xc8d4dc),
+        "z": UIColor(hex: 0xd8573a),
     ]
 
     static func color(_ key: Character, brightness: CGFloat = 1) -> UIColor {
