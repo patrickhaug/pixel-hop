@@ -91,6 +91,10 @@ final class QuestSite {
         return bite
     }
 
+    func nearest(to point: SIMD2<Float>) -> Float {
+        grummels.map { simd_distance($0.position, point) }.min() ?? .infinity
+    }
+
     func remove() {
         anchor.removeFromParent()
     }

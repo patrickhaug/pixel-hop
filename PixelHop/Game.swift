@@ -46,6 +46,9 @@ final class Game {
     @ObservationIgnored private var partner: Resident?
     @ObservationIgnored private var dialogAge: Float = 0
     @ObservationIgnored private var knock = SIMD2<Float>.zero
+    @ObservationIgnored private var lastHop = 0
+    @ObservationIgnored private var lastGround: Float = 0
+    @ObservationIgnored private var pulse: Float = 0
 
     private let walkSpeed: Float = 3.2
     private let cameraOffset: SIMD3<Float> = [0, 10, 10.5]
@@ -103,6 +106,14 @@ final class Game {
             hopTime = 0
         }
         body.position.y = abs(sin(hopTime * 10)) * 0.25
+        let hop = Int(hopTime * 10 / .pi)
+        if hop != lastHop {
+            lastHop = hop
+            if hop > 0 { Cue.step(WorldMap.tile(at: hopperPosition)).play() }
+        }
+        let ground = WorldMap.height(hopperPosition)
+        if abs(ground - lastGround) > 0.4 { Cue.climb.play() }
+        lastGround = ground
         body.orientation = simd_slerp(body.orientation, simd_quatf(angle: facing.yaw, axis: [0, 1, 0]), min(1, dt * 14))
         hopper.position.y += (WorldMap.height(hopperPosition) - hopper.position.y) * min(1, dt * 14)
         follow()
@@ -122,18 +133,18 @@ final class Game {
 
     func talk() {
         guard let resident = chunks?.residents.nearest(to: hopperPosition, within: 1.6) else { return }
-        let answer: (text: String, reward: Int)
+        let answer: (text: String, reward: Int, cue: Cue)
         if let errand = adventure?.talk(to: resident) {
             answer = errand
         } else {
             let (line, gift) = resident.talk()
-            answer = (line, gift ? 1 : 0)
+            answer = (line, gift ? 1 : 0, gift ? Cue.gift : Cue.talk)
         }
         if answer.reward > 0 {
             coins += answer.reward
             UserDefaults.standard.set(coins, forKey: "coins")
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
         }
+        answer.cue.play()
         partner = resident
         dialogAge = 0
         dialog = Dialog(title: resident.title, text: answer.text)
@@ -166,16 +177,21 @@ final class Game {
         case .bitten(let grummel)?:
             let away = hopperPosition - grummel
             knock = simd_length(away) > 0.01 ? simd_normalize(away) * 7 : [0, 7]
-            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            Cue.hurt.play()
         case .found(let item)?:
             announce("Gefunden!", "Du hast: \(item). Jetzt schnell zurück, bevor die Grummel dich kriegen!")
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            Cue.found.play()
         case .fainted?:
             travel(to: WorldMap.start)
             announce("Autsch!", "Die Grummel haben dich erwischt. Du ruhst dich zu Hause aus. Das Fundstück liegt wieder bei ihnen.")
-            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            Cue.faint.play()
         case nil:
             break
+        }
+        pulse -= dt
+        if adventure.danger < 3, pulse <= 0 {
+            Cue.danger.play()
+            pulse = 0.25 + adventure.danger * 0.15
         }
         body.isEnabled = adventure.safe == 0 || Int(adventure.safe * 10) % 2 == 0
         if simd_length(knock) > 0.05 {
@@ -256,6 +272,6 @@ final class Game {
         flying.append(Flying(entity: coin, age: 0))
         coins += 1
         UserDefaults.standard.set(coins, forKey: "coins")
-        UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+        Cue.coin.play()
     }
 }

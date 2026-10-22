@@ -185,6 +185,7 @@ final class Life {
     }
 
     private func splash(at point: SIMD3<Float>) {
+        Cue.splash.play()
         for _ in 0..<6 {
             let drop = puff.clone(recursive: true)
             drop.position = point
