@@ -1,22 +1,27 @@
 import Foundation
 
 struct Prop {
-    let model: VoxelModel
-    let footprint: SIMD2<Int>
+    let variants: [VoxelModel]
+    var footprint: SIMD2<Int> = [1, 1]
+    var natural = false
 }
 
 enum Models {
     static let props: [Character: Prop] = [
-        "H": Prop(model: house(wall: "a", roof: "z", shade: "r"), footprint: [3, 3]),
-        "G": Prop(model: house(wall: "r", roof: "o", shade: "z"), footprint: [3, 3]),
-        "L": Prop(model: lighthouse, footprint: [2, 2]),
-        "P": Prop(model: lamp, footprint: [1, 1]),
-        "B": Prop(model: bench, footprint: [1, 1]),
-        "F": Prop(model: bush, footprint: [1, 1]),
-        "Y": Prop(model: palm, footprint: [1, 1]),
-        "T": Prop(model: tree, footprint: [1, 1]),
-        "R": Prop(model: rock, footprint: [1, 1]),
+        "H": Prop(variants: [house(wall: "a", roof: "z", shade: "r"), house(wall: "w", roof: "b", shade: "n"), house(wall: "x", roof: "t", shade: "m")], footprint: [3, 3]),
+        "G": Prop(variants: [house(wall: "r", roof: "o", shade: "z"), house(wall: "y", roof: "z", shade: "r"), house(wall: "i", roof: "p", shade: "m")], footprint: [3, 3]),
+        "L": Prop(variants: [lighthouse], footprint: [2, 2]),
+        "P": Prop(variants: [lamp]),
+        "B": Prop(variants: [bench]),
+        "F": Prop(variants: [bush], natural: true),
+        "Y": Prop(variants: [palm], natural: true),
+        "T": Prop(variants: Nature.trees, natural: true),
+        "R": Prop(variants: Nature.rocks, natural: true),
+        "&": Prop(variants: Nature.snowyRocks, natural: true),
+        "o": Prop(variants: [boat], natural: true),
     ]
+
+    static let chimney: SIMD3<Float> = [0.65, 3.75, -0.15]
 
     static let hopper = VoxelModel(size: [9, 15, 10]) { m in
         m.ball("w", center: [4, 4, 4.5], radius: [3.2, 3.3, 3.8])
@@ -39,22 +44,6 @@ enum Models {
             let dy = (Float(p.y) - 3.5) / 3.9
             if dx * dx + dy * dy > 0.55 { return "o" }
             return p.x == 2 && (2...5).contains(p.y) ? "w" : "y"
-        }
-    }
-
-    static let tree = VoxelModel(size: [10, 15, 10]) { m in
-        m.box("h", x: 4...5, y: 0...5, z: 4...5)
-        m.ball(center: [4.5, 9.5, 4.5], radius: [4.6, 4.6, 4.6]) { p in
-            if p.y < 7 { return "t" }
-            if (p.x * 7 + p.y * 3 + p.z * 5) % 7 == 0 { return p.y > 9 ? "l" : "t" }
-            return "g"
-        }
-    }
-
-    static let rock = VoxelModel(size: [10, 6, 10]) { m in
-        m.ball(center: [4.5, 0.5, 4.5], radius: [4.3, 4.8, 4.0]) { p in
-            if p.y >= 4 && (p.x + p.z) % 3 == 0 { return "w" }
-            return p.y == 0 || (p.x * 5 + p.z * 3 + p.y) % 6 == 0 ? "d" : "e"
         }
     }
 
@@ -119,6 +108,29 @@ enum Models {
         }
         m.box("y", x: top...(top + 1), y: 25...25, z: (cz + 2)...(cz + 2))
         m.box("y", x: (top - 1)...(top - 1), y: 25...25, z: cz...cz)
+    }
+
+    static let boat = VoxelModel(size: [8, 22, 18]) { m in
+        for z in 0...17 {
+            let half = z < 2 ? 1 : z > 14 ? max(0, 17 - z) : 3
+            guard half > 0 else {
+                m.box("u", x: 3...4, y: 1...3, z: z...z)
+                continue
+            }
+            let left = 4 - half
+            let right = 3 + half
+            m.box("h", x: (half > 1 ? left + 1 : left)...(half > 1 ? right - 1 : right), y: 0...0, z: z...z)
+            m.box(x: left...right, y: 1...3, z: z...z) { p in
+                if p.x == left || p.x == right || z == 0 || z == 17 || half < 3 { return p.y == 3 ? "w" : "u" }
+                return p.y == 1 ? "f" : nil
+            }
+        }
+        m.box("h", x: 3...4, y: 2...20, z: 8...9)
+        for y in 6...19 {
+            m.box(y % 4 == 0 ? "r" : "w", x: 3...3, y: y...y, z: 10...(10 + (20 - y) / 2))
+        }
+        m.box("r", x: 3...4, y: 21...21, z: 7...9)
+        m.box("h", x: 2...5, y: 2...2, z: 4...4)
     }
 
     static let lighthouse = VoxelModel(size: [20, 66, 20]) { m in

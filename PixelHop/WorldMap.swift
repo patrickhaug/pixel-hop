@@ -9,10 +9,10 @@ enum WorldMap {
         "~~~~~~~~~~~~~P,,P~~~~~~~~~~~~~~PC,P~~~~~~~~~~~~~",
         "~~~,,,,,,,,,,,,,,~~~~~~~~~~~~~~,,,,,,,,,,,,,,~~~",
         "~~~,HHH,GGG,HHH,,~~~~##~~~~~~~~,,GGG,HHH,GGG,~~~",
-        "~~~,HHH,GGG,HHH,,~~~~#d~~~~~~~~,,GGG,HHH,GGG,~~~",
+        "~~~,HHH,GGG,HHH,,~o~~#d~~~~~~~~,,GGG,HHH,GGG,~~~",
         "~~~,HHH,GGG,HHH,,~~~~##~~~##~~~,,GGG,HHH,GGG,~~~",
         "~~~,,,,,,,,,,,,,,~~~~##~~~#d~~~,,,,,,,,,,,,,,~~~",
-        "~~~,FP,B,P,F,P,,,~~~~##~~~##~~~,,,P,B,P,F,P,F~~~",
+        "~~~,FP,B,P,F,P,,,~~~~##~o~##~~~,,,P,B,P,F,P,F~~~",
         "~~~,,,,,,,C,,,,,,~~~~d#~~~##~~~,,,,,,,,,,,,,,~~~",
         "~~~,C,,,,,,,,,,,,~~~~##~~~##~~~,,,,,,C,,,,,,,~~~",
         "~~~,,,,,,,,,,,,,,,,P,,,,P,,,,P,,,,,,,,,,,,,C,###",
@@ -31,14 +31,21 @@ enum WorldMap {
         "~~~...T..=.*....,,HHH,,GGG,,HHH,,~~~~~~##~~~~~~~",
         "~~~R.c...=......,,,,,,,,,,,,,,,,,~~~~~~##~~~~~~~",
         "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#d~~~~~~~",
-        "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##~~~~~~~",
+        "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~o~~~##~~~~~~~",
         "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##~~~~~~~",
         "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##~~~~~~~",
     ]
 
     private static let homeGrid = home.map { Array($0) }
     static let homeSize = SIMD2<Int>(homeGrid[0].count, homeGrid.count)
-    private static var cache: [SIMD2<Int>: [Character]] = [:]
+    static let step: Float = 0.5
+    private static let climb: Float = 0.8
+    private static var cache: [SIMD2<Int>: Patch] = [:]
+
+    private struct Patch {
+        var tiles: [Character] = []
+        var levels: [Int] = []
+    }
 
     static let start: SIMD2<Float> = {
         for (row, tiles) in homeGrid.enumerated() {
@@ -51,8 +58,14 @@ enum WorldMap {
 
     static func tile(_ column: Int, _ row: Int) -> Character {
         if isHome(column, row) { return homeGrid[row][column] }
-        let owner = chunk(of: [column, row])
-        return tiles(of: owner)[(row - owner.y * chunkSize) * chunkSize + column - owner.x * chunkSize]
+        let (patch, index) = lookup(column, row)
+        return patch.tiles[index]
+    }
+
+    static func level(_ column: Int, _ row: Int) -> Int {
+        if isHome(column, row) { return 0 }
+        let (patch, index) = lookup(column, row)
+        return patch.levels[index]
     }
 
     static func tile(at point: SIMD2<Float>) -> Character {
@@ -63,20 +76,28 @@ enum WorldMap {
         Block.of(tile(at: point)).solid
     }
 
+    static func canStep(from start: SIMD2<Float>, to point: SIMD2<Float>) -> Bool {
+        !isBlocked(point) && abs(height(point) - height(start)) <= climb
+    }
+
+    static func height(_ column: Int, _ row: Int) -> Float {
+        Block.of(tile(column, row)).height + Float(level(column, row)) * step
+    }
+
     static func height(_ point: SIMD2<Float>) -> Float {
-        Block.of(tile(at: point)).height
+        height(Int(point.x.rounded(.down)), Int(point.y.rounded(.down)))
     }
 
     static func chunk(of tile: SIMD2<Int>) -> SIMD2<Int> {
         [WorldGen.floorDiv(tile.x, chunkSize), WorldGen.floorDiv(tile.y, chunkSize)]
     }
 
-    static func props(in chunk: SIMD2<Int>) -> [(key: Character, center: SIMD2<Float>)] {
-        var result: [(key: Character, center: SIMD2<Float>)] = []
+    static func props(in chunk: SIMD2<Int>) -> [(key: Character, tile: SIMD2<Int>, center: SIMD2<Float>)] {
+        var result: [(key: Character, tile: SIMD2<Int>, center: SIMD2<Float>)] = []
         forEachTile(in: chunk) { column, row in
             let key = tile(column, row)
             guard let prop = Models.props[key], isAnchor(column, row, key: key, footprint: prop.footprint) else { return }
-            result.append((key: key, center: SIMD2<Float>(Float(column), Float(row)) + SIMD2<Float>(prop.footprint) / 2))
+            result.append((key: key, tile: [column, row], center: SIMD2<Float>(Float(column), Float(row)) + SIMD2<Float>(prop.footprint) / 2))
         }
         return result
     }
@@ -122,13 +143,22 @@ enum WorldMap {
         return anchors
     }()
 
-    private static func tiles(of chunk: SIMD2<Int>) -> [Character] {
-        if let tiles = cache[chunk] { return tiles }
+    private static func lookup(_ column: Int, _ row: Int) -> (Patch, Int) {
+        let owner = chunk(of: [column, row])
+        return (patch(of: owner), (row - owner.y * chunkSize) * chunkSize + column - owner.x * chunkSize)
+    }
+
+    private static func patch(of chunk: SIMD2<Int>) -> Patch {
+        if let patch = cache[chunk] { return patch }
         if cache.count > 4096 { cache.removeAll() }
-        var tiles: [Character] = []
-        tiles.reserveCapacity(chunkSize * chunkSize)
-        forEachTile(in: chunk) { column, row in tiles.append(WorldGen.tile(column, row)) }
-        cache[chunk] = tiles
-        return tiles
+        var patch = Patch()
+        patch.tiles.reserveCapacity(chunkSize * chunkSize)
+        patch.levels.reserveCapacity(chunkSize * chunkSize)
+        forEachTile(in: chunk) { column, row in
+            patch.tiles.append(WorldGen.tile(column, row))
+            patch.levels.append(WorldGen.level(column, row))
+        }
+        cache[chunk] = patch
+        return patch
     }
 }

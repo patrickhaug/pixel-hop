@@ -2,25 +2,49 @@ import Foundation
 
 enum WorldGen {
     private static let cell = 6
+    private static let snowLine = 11
+    private static let pineLine = 5
 
     static func tile(_ column: Int, _ row: Int) -> Character {
         if homeDistance(Double(column), Double(row)) <= 3 { return "." }
         let e = elevation(column, row)
         let roll = Hash.value(column, row, 5) % 1000
-        if e < -0.15 { return "~" }
+        if e < -0.15 { return roll < 3 ? "o" : "~" }
         if e < -0.08 { return roll < 40 ? "Y" : roll >= 990 ? "s" : ":" }
         let cx = floorDiv(column, cell)
         let cz = floorDiv(row, cell)
         if isTown(cx, cz) { return townTile(column - cx * cell, row - cz * cell, cx: cx, cz: cz, roll: roll) }
+        let altitude = level(column, row)
+        if altitude >= snowLine { return roll < 30 ? "&" : "^" }
         if abs(fbm(Double(column) / 30, Double(row) / 30, seed: 3)) < 0.035 { return roll >= 992 ? "c" : "=" }
         if fbm(Double(column) / 24, Double(row) / 24, seed: 4) > 0.25 {
             if roll < 380 { return "T" }
         } else {
-            if roll < 25 { return "T" }
-            if roll < 40 { return "R" }
-            if roll < 110 { return "*" }
+            if fbm(Double(column) / 20, Double(row) / 20, seed: 21) > 0.3 {
+                if roll < 200 { return "*" }
+                if roll < 330 { return "%" }
+            }
+            if roll < UInt32(25 + altitude * 4) { return "T" }
+            if roll < UInt32(40 + altitude * 8) { return "R" }
+            if roll < 75 { return "*" }
+            if roll < 110 { return "%" }
         }
         return roll >= 992 ? "c" : "."
+    }
+
+    static func level(_ column: Int, _ row: Int) -> Int {
+        let e = elevation(column, row)
+        guard e >= -0.08, !isTown(floorDiv(column, cell), floorDiv(row, cell)) else { return 0 }
+        let coast = min(1, (e + 0.08) / 0.3) * min(1, max(0, (homeDistance(Double(column), Double(row)) - 3) / 12))
+        return Int(max(0, mountain(column, row) - 0.12) * 28 * coast)
+    }
+
+    static func variant(of key: Character, _ column: Int, _ row: Int, count: Int) -> Int {
+        guard count > 1 else { return 0 }
+        if key == "T" && WorldMap.level(column, row) >= pineLine { return 0 }
+        if Hash.value(column, row, 22) % 10 < 3 { return Int(Hash.value(column, row, 23) % UInt32(count)) }
+        let region = (fbm(Double(column) / 40, Double(row) / 40, seed: 6) * 0.8 + 0.5) * Double(count)
+        return min(max(Int(region.rounded(.down)), 0), count - 1)
     }
 
     static func floorDiv(_ a: Int, _ b: Int) -> Int {
@@ -48,6 +72,7 @@ enum WorldGen {
         return fbm(Double(x) / 70, Double(z) / 70, seed: 2) > 0.22
             && elevation(x, z) > 0.05
             && homeDistance(Double(x), Double(z)) > 10
+            && mountain(x, z) < 0.12
     }
 
     private static func house(_ cx: Int, _ cz: Int) -> Character? {
@@ -61,6 +86,10 @@ enum WorldGen {
     private static func elevation(_ column: Int, _ row: Int) -> Double {
         let distance = homeDistance(Double(column), Double(row))
         return fbm(Double(column) / 38, Double(row) / 38, seed: 1) + max(0, (16 - distance) / 16) * 0.9
+    }
+
+    private static func mountain(_ column: Int, _ row: Int) -> Double {
+        fbm(Double(column) / 44, Double(row) / 44, seed: 30)
     }
 
     private static func homeDistance(_ x: Double, _ z: Double) -> Double {

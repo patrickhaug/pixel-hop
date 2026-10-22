@@ -200,17 +200,135 @@ enum Textures {
             "uuuuuuuuuhhuuuuu",
             "uuuuuuhuuuuuuuuu",
         ],
+        "snow": [
+            "wxwwwwwwxwwwwwww",
+            "wwwwwwwwxwwwwwwx",
+            "wxwwwwwwwwwwwwww",
+            "xxwwwwwewwwwwwwx",
+            "wwwwxwwewwwwwwww",
+            "xwwwewwxwwwwwwww",
+            "wwwwxwwxwwwwwwww",
+            "wwwwwwwwwwwwwwww",
+            "wwwxwwwwwwwxwwww",
+            "wwwwwxwwwewwwxww",
+            "wwwwwwwwwwwwewww",
+            "wwwwwewwwwwwweww",
+            "wwwwwwwwwwwwwxxw",
+            "wwxwwwwwwwxwwwww",
+            "wwwxwwwwxwwxwwxw",
+            "wwwwwwwwwxwxwwww",
+        ],
+        "snowSide": [
+            "wxwwwwwwxwwwwwww",
+            "wwwwwwwwxwwwwwwx",
+            "wxwwwwwwwwwwwwww",
+            "xxxxxwwwwxxxxwxw",
+            "dxddexeedxeeexde",
+            "eedexeeeddddexmd",
+            "dededdddedxddddd",
+            "eeemeexxdxdxeeee",
+            "eeeeeededxxeedee",
+            "emxeexeeeexmedde",
+            "ddddeeeexddedeme",
+            "eeexeeemddddeemx",
+            "eededdddededdddd",
+            "meexeemeededeeee",
+            "eeeeeeeedeexedxe",
+            "eeeemdeeemeexxxe",
+        ],
+        "rock": [
+            "deedddddxededddd",
+            "deedeeexdmeemeee",
+            "edxexdeeexeeeeee",
+            "xxxexxeeeeeeeede",
+            "ddddeeeedeeeeede",
+            "eedexeeeddddexmd",
+            "dededdddedxddddd",
+            "eeemeexxdxdxeeee",
+            "eeeeeededxxeedee",
+            "emxeexeeeexmedde",
+            "ddddeeeexddedeme",
+            "eeexeeemddddeemx",
+            "eededdddededdddd",
+            "meexeemeededeeee",
+            "eeeeeeeedeexedxe",
+            "eeeemdeeemeexxxe",
+        ],
+        "cliff": [
+            "uhuuuuuhudeeuuuu",
+            "uuuuuuuuueeduuuu",
+            "uuuuuuuuhedeuuhh",
+            "uuuuuuuuuhuhuuuu",
+            "uuuuuhfuuuuuhuuu",
+            "uuuuufuuuuuuuuuu",
+            "uuuhuuhuudeehuuu",
+            "uuuufuuuueedhhuu",
+            "huuufuuuuedehuuu",
+            "uuuuuudeedeeuuud",
+            "huuuhueedeeduuue",
+            "uhuuhuedeedeuuue",
+            "uuudeeuuuuuuuufu",
+            "uuueeduuuuuuuuuu",
+            "uuhedeuhuuuuuuuf",
+            "ufudeeuuuuuuuuuh",
+        ],
+        "daisies": [
+            "gggggggtgttggglg",
+            "tgggggggglwggglg",
+            "gggggggggwywgggg",
+            "gggwggggggwlgggg",
+            "ggwywllggggggggl",
+            "gggwgllglggggggg",
+            "glgtgggggggglggg",
+            "ggllggggggggtggg",
+            "gggglggggggglwgg",
+            "ggggggggggggwywg",
+            "lgggtglggtgggwgg",
+            "tgggggwggggggglg",
+            "gggtgwywtggggggg",
+            "gwggggwggggggggg",
+            "wywgglggggtggtgl",
+            "gwgggggggggggggl",
+        ],
+        "flowersBlue": [
+            "gglggggggggltggg",
+            "glgtgggggggggggg",
+            "gggsgglltggggggg",
+            "lgsyslggggggggll",
+            "gggsgggggggwgggg",
+            "ggggggggggwswggg",
+            "lggglgggggtwggtg",
+            "gcggggglgtgggtgg",
+            "cycgggggglgggggg",
+            "gcggggltggggglgt",
+            "ggggggbggggggggg",
+            "gtglgbybgglllggg",
+            "tgggglbggggggsll",
+            "gglggggggllgsysg",
+            "ggglgtggggglgsgg",
+            "gggggggglggggggg",
+        ],
+    ]
+
+    static func pick(_ name: String, _ column: Int, _ row: Int) -> String {
+        guard let options = variants[name], Hash.value(column, row, 26) % 100 < 12 else { return name }
+        return options[Int(Hash.value(column, row, 27) % UInt32(options.count))]
+    }
+
+    private static let variants: [String: [String]] = [
+        "grass": ["daisies"],
     ]
 }
 
 struct Block {
     let top: String
     let side: String
+    var wall = "cliff"
     let height: Float
     let solid: Bool
 
     var blocking: Block {
-        Block(top: top, side: side, height: height, solid: true)
+        Block(top: top, side: side, wall: wall, height: height, solid: true)
     }
 
     static func of(_ tile: Character) -> Block {
@@ -221,6 +339,8 @@ struct Block {
     private static let cobble = Block(top: "cobble", side: "quay", height: 0, solid: false)
     private static let sand = Block(top: "sand", side: "sandSide", height: -0.3, solid: false)
     private static let planks = Block(top: "planks", side: "planksSide", height: 0, solid: false)
+    private static let snow = Block(top: "snow", side: "snowSide", wall: "rock", height: 0, solid: false)
+    private static let water = Block(top: "water", side: "water", wall: "water", height: -0.8, solid: true)
 
     private static let kinds: [Character: Block] = [
         ",": cobble, "C": cobble, "@": cobble,
@@ -228,9 +348,11 @@ struct Block {
         "P": cobble.blocking, "B": cobble.blocking, "F": cobble.blocking,
         ".": grass, "c": grass, "T": grass.blocking, "R": grass.blocking,
         "*": Block(top: "flowers", side: "earth", height: 0, solid: false),
+        "%": Block(top: "flowersBlue", side: "earth", height: 0, solid: false),
         "=": Block(top: "path", side: "earth", height: 0, solid: false),
         ":": sand, "s": sand, "Y": sand.blocking,
         "#": planks, "d": planks,
-        "~": Block(top: "water", side: "water", height: -0.8, solid: true),
+        "^": snow, "&": snow.blocking,
+        "~": water, "o": water,
     ]
 }
