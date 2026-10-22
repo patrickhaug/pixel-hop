@@ -14,7 +14,7 @@ Retro pixel game for iPhone and iPad that Patrick builds with his son. The son i
 
 - **World rules live in `WORLD.md`** (units, map characters, textures, voxel models, Hopper, camera). Read it before changing the world and keep it up to date.
 - `PixelHop/PixelHopApp.swift` app entry, `PixelHop/GameView.swift` RealityView + HUD, `PixelHop/Game.swift` game state and per-frame logic, `PixelHop/Scenery.swift` materials, sky, shadow.
-- World building blocks: `WorldMap.swift` (ASCII map), `Textures.swift` (block textures and `Block` catalog), `Models.swift` (voxel models from `VoxelModel`), `Terrain.swift` (map to mesh), `Atlas.swift` (single texture with baked face shading), `MeshBuilder.swift`, `Face.swift`.
+- World building blocks: `WorldMap.swift` (home island map + tile lookup), `WorldGen.swift` (rules for the infinite world), `Chunks.swift` (loads 16×16 chunks around Hopper), `Hash.swift`, `Textures.swift` (block textures and `Block` catalog), `Models.swift` (voxel models from `VoxelModel`), `Terrain.swift` (map to mesh), `Atlas.swift` (single texture with baked face shading), `MeshBuilder.swift`, `Face.swift`.
 - Pixel art is ASCII: one string per row, one character per pixel, characters are keys of `Palette.colors`, `.` is transparent. 2D HUD art lives in `Icons.swift` and is drawn with `PixelArt.image`.
 - iPhone: landscape only. iPad: all orientations and resizable windows; RealityView and the SwiftUI HUD adapt on their own.
 - Every file in `PixelHop/` is picked up automatically (synced folder). Never touch `project.pbxproj` to add files.
@@ -22,7 +22,7 @@ Retro pixel game for iPhone and iPad that Patrick builds with his son. The son i
 
 ## Pipeline
 
-- Claude Code cloud runs on Linux without Xcode: you cannot build or run the app there. Work on a branch and open a PR; `.github/workflows/ci.yml` builds it on macOS, launches it in the iPhone simulator and prints a screenshot as base64 JPEG between `SCREENSHOT-BEGIN`/`SCREENSHOT-END` in the job log. Decode and look at it before merging visual changes. If the check goes red, read the log and push a fix as a new commit.
+- Claude Code cloud runs on Linux without Xcode: you cannot build or run the app there. Work on a branch and open a PR; `.github/workflows/ci.yml` builds it on macOS, launches it in the iPhone simulator and prints screenshots as base64 JPEG between `SCREENSHOT-BEGIN <name>`/`SCREENSHOT-END <name>` in the job log (`start` at the home island, `village` via the launch argument `-screenshotStart x,z`). Decode and look at it before merging visual changes. If the check goes red, read the log and push a fix as a new commit.
 - When the CI check is green, Claude merges the PR itself (squash, with a commit message so no trailer is added). `.github/workflows/testflight.yml` then archives, signs via the App Store Connect API key (cloud signing) and uploads to TestFlight. Build number = GitHub run number. It shows up in TestFlight about 20-30 min after the merge.
 - Commits: conventional prefix (`feat:`, `fix:` ...), no `Co-Authored-By` or session trailers, no force push.
 - Local: `open PixelHop.xcodeproj`, run on a simulator. Screenshots go to `__dev/`.
