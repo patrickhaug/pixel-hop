@@ -53,14 +53,14 @@ final class Adventure {
         return (errand.ask, 0, Cue.quest)
     }
 
-    func update(_ dt: Float, time: Float, hopper: SIMD2<Float>) -> Event? {
+    func update(_ dt: Float, time: Float, hopper: SIMD2<Float>, grounded: Bool) -> Event? {
         safe = max(0, safe - dt)
         if flash > 0 { flash = max(0, flash - Double(dt) * 2.5) }
         guard var current = quest, let site else {
             danger = .infinity
             return nil
         }
-        danger = safe > 0 ? .infinity : site.nearest(to: hopper)
+        danger = safe > 0 || !grounded ? .infinity : site.nearest(to: hopper)
         let way = current.goal - hopper
         let angle = (Double(atan2(way.x, -way.y)) * 180 / .pi / 10).rounded() * 10
         if angle != arrow { arrow = angle }
@@ -71,7 +71,7 @@ final class Adventure {
             label = current.label
             return .found(current.errand.item)
         }
-        guard let bite = site.update(dt, time: time, hopper: hopper, hunting: safe == 0), safe == 0 else { return nil }
+        guard let bite = site.update(dt, time: time, hopper: hopper, hunting: safe == 0 && grounded), safe == 0, grounded else { return nil }
         hearts = max(practice ? 1 : 0, hearts - 1)
         safe = 1.6
         flash = 1

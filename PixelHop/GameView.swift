@@ -26,6 +26,9 @@ struct GameView: View {
                         if let adventure = game.adventure {
                             Hearts(count: adventure.hearts)
                         }
+                        if let flight = game.flight {
+                            EnergyBar(level: flight.energy)
+                        }
                     }
                     Spacer()
                     if let adventure = game.adventure, let label = adventure.label {
@@ -42,8 +45,13 @@ struct GameView: View {
                             .onTapGesture { game.closeDialog() }
                         Spacer()
                     }
-                    if game.nearby != nil && game.dialog == nil {
-                        TalkButton { game.talk() }
+                    VStack(alignment: .trailing, spacing: 14) {
+                        if game.nearby != nil && game.dialog == nil {
+                            TalkButton { game.talk() }
+                        }
+                        if let flight = game.flight {
+                            FlyButton(flying: flight.flying) { game.fly() }
+                        }
                     }
                 }
             }
