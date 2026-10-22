@@ -54,7 +54,7 @@ final class Resident {
             return
         }
         let next = position + offset / distance * min(distance, species.speed * dt)
-        guard !WorldMap.isBlocked(next) else {
+        guard WorldMap.canStep(from: position, to: next) else {
             wait = 0.5
             target = pickTarget()
             return
@@ -155,7 +155,7 @@ final class Residents {
     private static func choices(on tile: Character) -> (species: [Character], density: UInt32) {
         switch tile {
         case ",", "C": (["k", "h", "c"], 12)
-        case ".", "*", "=", "c": (["f", "q", "c", "h"], 4)
+        case ".", "*", "%", "=", "c": (["f", "q", "c", "h"], 4)
         case ":", "s": (["d", "q"], 10)
         default: ([], 0)
         }

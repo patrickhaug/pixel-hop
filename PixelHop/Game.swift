@@ -68,6 +68,7 @@ final class Game {
         hopper.addChild(try Scenery.shadow())
         hopper.addChild(body)
         move(to: Self.start)
+        hopper.position.y = WorldMap.height(Self.start)
         root.addChild(hopper)
         camera.camera.fieldOfViewInDegrees = 40
         camera.camera.far = 300
@@ -98,8 +99,10 @@ final class Game {
         }
         body.position.y = abs(sin(hopTime * 10)) * 0.25
         body.orientation = simd_slerp(body.orientation, simd_quatf(angle: facing.yaw, axis: [0, 1, 0]), min(1, dt * 14))
+        hopper.position.y += (WorldMap.height(hopperPosition) - hopper.position.y) * min(1, dt * 14)
         follow()
-        try? chunks?.update(around: SIMD2<Float>(hopper.position.x, hopper.position.z), budget: 2)
+        try? chunks?.update(around: hopperPosition, budget: 2)
+        chunks?.life.update(time: time, dt: dt, around: hopper.position)
         updateCoins(dt)
         updateResidents(dt)
         if Self.screenshotTalk, time > 17, dialog == nil {
@@ -144,7 +147,7 @@ final class Game {
     private func walk(_ direction: Direction, by step: Float) {
         let position = SIMD2<Float>(hopper.position.x, hopper.position.z)
         let ahead = position + direction.vector * step
-        if !Self.isBlocked(ahead) {
+        if !Self.isBlocked(ahead, from: position) {
             move(to: ahead)
             return
         }
@@ -153,17 +156,18 @@ final class Game {
         let slide = direction.vector.x == 0
             ? SIMD2<Float>(position.x + shift, position.y)
             : SIMD2<Float>(position.x, position.y + shift)
-        if !Self.isBlocked(slide) { move(to: slide) }
+        if !Self.isBlocked(slide, from: position) { move(to: slide) }
     }
 
     private func move(to position: SIMD2<Float>) {
-        hopper.position = [position.x, WorldMap.height(position), position.y]
+        hopper.position.x = position.x
+        hopper.position.z = position.y
     }
 
-    private static func isBlocked(_ center: SIMD2<Float>) -> Bool {
+    private static func isBlocked(_ center: SIMD2<Float>, from start: SIMD2<Float>) -> Bool {
         let half: Float = 0.3
         let corners: [SIMD2<Float>] = [[-half, -half], [half, -half], [-half, half], [half, half]]
-        return corners.contains { WorldMap.isBlocked(center + $0) }
+        return corners.contains { !WorldMap.canStep(from: start, to: center + $0) }
     }
 
     private func follow() {

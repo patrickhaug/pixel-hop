@@ -63,6 +63,7 @@ jobs:
           shoot start
           shoot talk -screenshotTalk YES
           shoot village -screenshotStart 3.5,-55.5
+          shoot hills -screenshotStart 42.5,-29.5
           xcrun simctl spawn "$UDID" log show --last 3m --style compact --predicate 'process == "PixelHop"' | tail -n 60
 
       - name: Upload screenshot

@@ -15,31 +15,37 @@ Pixel Hop ist eine 3D-Welt aus Blöcken mit Pixel-Texturen. Diese Regeln gelten 
 - Jede Kachel hat genau ein Zeichen: `WorldMap.tile(Spalte, Zeile)`.
 - **Heimatinsel**: `WorldMap.home` ist die von Hand gebaute Hafenstadt (48 × 32). Ihre linke obere Ecke ist Kachel (0, 0). Ein Kanal umgibt sie, und Brücken führen nach Westen, Osten und Süden aufs Festland.
 - **Alles andere** berechnet `WorldGen.tile` aus den Regeln unten. Das Ergebnis ist für jede Kachel immer gleich.
-- Jedes Zeichen ist ein **Block** (`Block` in `PixelHop/Textures.swift`) mit Textur oben, Textur seitlich, Höhe der Oberkante und der Angabe, ob man durchlaufen kann.
-- Jedes Zeichen kann zusätzlich ein **Requisit** tragen (`Models.props`). Das ist ein Voxel-Modell mit einer **Grundfläche** in Kacheln. Eine 3 × 3-Grundfläche schreibt man, indem man das Zeichen 3 × 3-mal in die Karte setzt. Gleiche Zeichen nebeneinander ergeben mehrere Häuser, aufgeteilt von links oben aus. Das Modell steht mittig auf der Grundfläche, auf der Höhe seines Blocks.
+- Jedes Zeichen ist ein **Block** (`Block` in `PixelHop/Textures.swift`) mit Textur oben, Textur seitlich, Textur für tiefe Wände (`wall`, sonst Erde mit Steinen), Höhe der Oberkante und der Angabe, ob man durchlaufen kann.
+- Zusätzlich hat jede Kachel eine **Höhenstufe** (`WorldMap.level`, siehe Berge). Die Oberkante liegt bei Blockhöhe + Stufe × 0,5.
+- Jedes Zeichen kann zusätzlich ein **Requisit** tragen (`Models.props`). Das ist ein Voxel-Modell, oft in mehreren **Varianten**, mit einer **Grundfläche** in Kacheln. Eine 3 × 3-Grundfläche schreibt man, indem man das Zeichen 3 × 3-mal in die Karte setzt. Gleiche Zeichen nebeneinander ergeben mehrere Häuser, aufgeteilt von links oben aus. Das Modell steht mittig auf der Grundfläche, auf der Höhe seines Blocks.
 
 | Zeichen | Block | Höhe | Requisit (Grundfläche) | Begehbar |
 |---|---|---|---|---|
 | `,` | Kopfsteinpflaster, Kaimauer als Seite | 0 | – | ja |
 | `.` | Gras | 0 | – | ja |
-| `*` | Gras mit Blumen | 0 | – | ja |
+| `*` | Gras mit bunten Blumen | 0 | – | ja |
+| `%` | Gras mit blauen Blumen | 0 | – | ja |
+| `^` | Schnee, Fels als Wand | 0 | – | ja |
 | `=` | Sandweg | 0 | – | ja |
 | `:` | Strand | −0,3 | – | ja |
 | `#` | Holzsteg | 0 | – | ja |
 | `~` | Wasser | −0,8 | – | nein |
-| `H` | Pflaster | 0 | Haus, Sandstein mit rotem Dach (3 × 3) | nein |
-| `G` | Pflaster | 0 | Haus, rot mit orangem Dach (3 × 3) | nein |
+| `o` | Wasser | −0,8 | Segelboot | nein |
+| `H` | Pflaster | 0 | Haus (3 × 3): Sandstein/rot, weiß/blau oder grau/türkis | nein |
+| `G` | Pflaster | 0 | Haus (3 × 3): rot/orange, gelb/rot oder rosa/lila | nein |
 | `L` | Pflaster | 0 | Leuchtturm (2 × 2) | nein |
 | `P` | Pflaster | 0 | Laterne | nein |
 | `B` | Pflaster | 0 | Bank | nein |
 | `F` | Pflaster | 0 | Blumenbusch im Topf | nein |
 | `Y` | Strand | −0,3 | Palme | nein |
-| `T` | Gras | 0 | Baum | nein |
-| `R` | Gras | 0 | Stein | nein |
+| `T` | Gras | 0 | Baum: Tanne, Birke, Laubbaum, Herbstbaum oder Kirschblüte | nein |
+| `R` | Gras | 0 | Stein, glatt oder bemoost | nein |
+| `&` | Schnee | 0 | Stein mit Schneehaube | nein |
 | `C` `c` `d` `s` | Pflaster, Gras, Steg, Strand | je nach Block | Münze | ja |
 | `@` | Pflaster | 0 | Startpunkt von Hopper | ja |
 
-- Ist eine Nachbarkachel niedriger, bekommt der Block dort eine Seitenwand. Weil das Wasser tiefer liegt, entstehen am Wasser 0,8 hohe Kaimauern.
+- Ist eine Nachbarkachel niedriger, bekommt der Block dort eine Seitenwand. Weil das Wasser tiefer liegt, entstehen am Wasser 0,8 hohe Kaimauern. Ist die Wand höher als 1, wird sie in Stücke von 1 geteilt: oben die Seitentextur (mit Grasnarbe oder Schneekante), darunter die Wand-Textur.
+- Gras bekommt auf 12 % der Kacheln (Hash) die Variante mit Gänseblümchen (`Textures.pick`).
 - Hopper und Münzen stehen immer auf der Höhe des Blocks unter ihnen.
 
 ## Unendliche Welt (`WorldGen.swift`)
@@ -52,10 +58,27 @@ Zufall gibt es nur über `Hash.value` (FNV-Hash) mit einem festen Seed pro Regel
    - Die erste Zeile und Spalte jeder Zelle ist Straße `,`.
    - 70 % der Zellen haben ein Haus `H`/`G` (3 × 3, ab Position 1,1), daneben eine Laterne, manchmal einen Busch und eine Bank. Die anderen Zellen sind kleine Plätze mit Bäumen, Büschen und einer Laterne.
    - Ein Haus gibt es nur, wenn alle 9 Kacheln Land sind.
-4. **Feldwege** `=`: wo der Betrag des Weg-Rauschens (Maßstab 30) unter 0,035 liegt.
-5. **Wald**: Wo das Wald-Rauschen (Maßstab 24) über 0,25 liegt, stehen auf 38 % der Kacheln Bäume.
-6. **Wiese**: sonst 2,5 % Bäume, 1,5 % Steine, 7 % Blumen.
-7. **Münzen**: 0,8 % auf Wiese und Wegen, 1–1,5 % auf Dorfstraßen.
+   - Dörfer gibt es nur, wo das Berg-Rauschen in der Zellmitte unter 0,12 liegt. Dorfzellen sind immer flach (Stufe 0).
+4. **Berge**: Über 11 Stufen liegt Schnee `^` mit 3 % verschneiten Steinen `&`.
+5. **Feldwege** `=`: wo der Betrag des Weg-Rauschens (Maßstab 30) unter 0,035 liegt.
+6. **Wald**: Wo das Wald-Rauschen (Maßstab 24) über 0,25 liegt, stehen auf 38 % der Kacheln Bäume.
+7. **Blumenwiesen**: Wo das Blumen-Rauschen (Maßstab 20) über 0,3 liegt, sind 20 % bunte und 13 % blaue Blumen.
+8. **Wiese**: sonst 2,5 % Bäume und 1,5 % Steine, je Höhenstufe mehr (+0,4 % Bäume, +0,8 % Steine), dazu 3,5 % bunte und 3,5 % blaue Blumen.
+9. **Münzen**: 0,8 % auf Wiese und Wegen, 1–1,5 % auf Dorfstraßen.
+
+Im tiefen Wasser schwimmen auf 0,3 % der Kacheln Segelboote `o`.
+
+### Berge (`WorldGen.level`)
+
+- Jede Kachel hat eine Höhenstufe ab 0. **Eine Stufe ist 0,5 hoch.**
+- Stufe = (Berg-Rauschen mit Maßstab 44 − 0,12) × 28 × Küstenfaktor, abgerundet. Der Küstenfaktor wächst vom Strand (Höhe −0,08) bis Höhe 0,22 von 0 auf 1 und ist in den ersten 15 Kacheln um die Heimat kleiner. So steigen Berge sanft an und Ufer, Heimat und Dörfer bleiben auf Stufe 0.
+- Ab Stufe 5 wachsen nur noch Tannen, ab Stufe 11 liegt Schnee.
+- **Hopper und die Bewohner kommen bis zu 0,8 höher oder tiefer** (`WorldMap.canStep`): eine Stufe hoch hüpfen geht, eine Wand aus zwei Stufen (1,0) nicht.
+
+### Varianten und Zufall
+
+- Hat ein Requisit mehrere Varianten, wählt `WorldGen.variant` eine aus: zu 30 % reiner Zufall (Hash), sonst nach dem Gegend-Rauschen (Maßstab 40). So gibt es Gegenden mit Birken, Herbstwäldern oder Kirschblüten und Straßen mit ähnlichen Häusern, aber immer mit etwas Durcheinander.
+- Natürliche Requisiten (Bäume, Steine, Büsche, Palmen, Boote) werden zufällig in 90°-Schritten gedreht und auf 85–120 % skaliert.
 
 Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGen.tile`, einen Block in `Textures.swift` und gegebenenfalls ein Requisit in `Models.props`.
 
@@ -77,7 +100,7 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
 
 ## Voxel-Modelle
 
-- `VoxelModel` in `PixelHop/VoxelModel.swift`, die Modelle selbst stehen in `PixelHop/Models.swift`.
+- `VoxelModel` in `PixelHop/VoxelModel.swift`. Die Modelle stehen in `PixelHop/Models.swift` (Gebäude, Hopper, Boot), `Nature.swift` (Bäume, Steine), `Animals.swift` (Bewohner) und `Critters.swift` (kleine Tiere und Effekte).
 - Modelle werden aus Formen gebaut: `box` (Quader), `ball` (Ellipsoid) und `cylinder` (Säule, Radius pro Höhe), je mit einer Palette-Farbe oder einer Farb-Regel pro Voxel. Gibt die Farb-Regel `nil` zurück, bleibt das Voxel leer. Für Zufallsmuster gibt es `VoxelModel.noise`, das ist für jede Position immer gleich.
 - Der Drehpunkt liegt unten in der Mitte. Ein Modell darf über seine Grundfläche hinausragen, etwa Palmwedel oder Dachüberstände.
 - Gebäude schauen mit Tür und Fenstern nach Süden zur Kamera.
@@ -88,7 +111,7 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
 - Hopper ist ein weißer Hase (`Models.hopper`), 9 × 15 × 10 Voxel groß, und schaut im Modell nach Süden.
 - Die Hitbox ist 0,6 × 0,6 Blöcke. Läuft Hopper schräg vor eine Lücke, rutscht er automatisch in die Gasse.
 - Beim Laufen hüpft er (Sinus, 0,25 hoch) und dreht sich weich in die Laufrichtung. Sein Schatten bleibt am Boden.
-- Er läuft 3,2 Blöcke pro Sekunde.
+- Er läuft 3,2 Blöcke pro Sekunde. Seine Höhe gleitet weich zur Höhe der Kachel unter ihm, so sieht eine Stufe wie ein Hüpfer aus.
 
 ## Bewohner
 
@@ -119,6 +142,18 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
   - Das Textfeld schließt sich beim Antippen, nach 6 Sekunden oder wenn Hopper weggeht.
 - Alle Texte sind kurz, freundlich und auf Deutsch.
 
+## Leben in der Welt (`Life.swift`)
+
+Alles bewegt sich nur, wenn es in Hoppers Nähe ist. Ort und Takt kommen aus dem Hash, damit es nicht im Gleichschritt wackelt.
+
+- **Bäume und Palmen** wiegen sich im Wind (±0,04 rad).
+- **Boote** schaukeln auf dem Wasser.
+- **Schornsteine** jedes Hauses rauchen: drei Wölkchen steigen nacheinander auf, wachsen und verschwinden.
+- **Schmetterlinge** flattern über 15 % der Blumenkacheln.
+- **Möwen**: In 40 % der Chunks kreisen zwei Möwen 4,5 über dem Boden.
+- **Glitzern**: Auf 4 % der Wasserkacheln blitzt ab und zu ein Lichtfunke auf.
+- **Fische**: Alle 2–5 Sekunden springt in Hoppers Nähe ein Fisch im Bogen aus dem Wasser, mit Spritzern beim Ein- und Auftauchen.
+
 ## Kamera
 
 - Die Kamera schaut immer schräg von oben nach Norden und folgt Hopper mit festem Abstand (0, 10, 10,5). Das Sichtfeld beträgt 40°.
@@ -132,4 +167,4 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
 
 ## Prüfen ohne Mac
 
-- CI baut die App, startet sie im iPhone-Simulator und macht Screenshots. Die Bilder stehen im Log zwischen `SCREENSHOT-BEGIN <name>` und `SCREENSHOT-END <name>` als Base64-JPEG und zusätzlich als Artefakt `screenshots`: `start` zeigt die Heimatinsel, `talk` ein Gespräch mit dem Hund am Start (Startargument `-screenshotTalk YES`), `village` ein erzeugtes Dorf. Mit dem Startargument `-screenshotStart x,z` beginnt Hopper an einer anderen Stelle. Weil das iPhone im Hochformat bootet, liegt das Querformat-Spiel im Bild um 90° gedreht.
+- CI baut die App, startet sie im iPhone-Simulator und macht Screenshots. Die Bilder stehen im Log zwischen `SCREENSHOT-BEGIN <name>` und `SCREENSHOT-END <name>` als Base64-JPEG und zusätzlich als Artefakt `screenshots`: `start` zeigt die Heimatinsel, `talk` ein Gespräch mit dem Hund am Start (Startargument `-screenshotTalk YES`), `village` ein erzeugtes Dorf, `hills` einen Weg den Berg hinauf zum Schnee. Mit dem Startargument `-screenshotStart x,z` beginnt Hopper an einer anderen Stelle. Weil das iPhone im Hochformat bootet, liegt das Querformat-Spiel im Bild um 90° gedreht.
