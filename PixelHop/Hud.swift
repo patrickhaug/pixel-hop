@@ -36,6 +36,39 @@ struct Hearts: View {
     }
 }
 
+struct EnergyBar: View {
+    let level: Double
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            Rectangle().fill(Color(red: 0.2, green: 0.24, blue: 0.34))
+            Rectangle()
+                .fill(Color(red: 0.45, green: 0.94, blue: 0.97))
+                .frame(width: 84 * level)
+        }
+        .frame(width: 84, height: 12)
+        .overlay(Rectangle().stroke(Color(red: 0.1, green: 0.11, blue: 0.17), lineWidth: 3))
+    }
+}
+
+struct FlyButton: View {
+    let flying: Bool
+    let action: () -> Void
+    private static let icon = PixelArt.image(Icons.wings)
+
+    var body: some View {
+        Button(action: action) {
+            Image(uiImage: Self.icon)
+                .interpolation(.none)
+                .resizable()
+                .frame(width: 80, height: 50)
+                .padding(10)
+                .background(Circle().fill(flying ? Color(red: 0.45, green: 0.94, blue: 0.97).opacity(0.85) : Color.black.opacity(0.25)))
+        }
+        .accessibilityLabel(flying ? "Landen" : "Fliegen")
+    }
+}
+
 struct QuestBanner: View {
     let label: String
     let arrow: Double

@@ -1,7 +1,7 @@
 import UIKit
 
 enum Cue {
-    case coin, gift, talk, steer, quest, found, reward, hurt, faint, splash, danger, climb
+    case coin, gift, talk, steer, quest, found, reward, hurt, faint, splash, danger, climb, takeoff, land, flap
     case step(Character)
 
     func play() {
@@ -40,6 +40,15 @@ enum Cue {
             UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 0.6)
         case .climb:
             UIImpactFeedbackGenerator(style: .light).impactOccurred(intensity: 0.7)
+        case .takeoff:
+            Sounds.shared.play("takeoff", volume: 0.6)
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        case .land:
+            Sounds.shared.play("land", volume: 0.6)
+            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+        case .flap:
+            Sounds.shared.play("flap", volume: 0.2)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred(intensity: 0.3)
         case .step(let tile):
             Sounds.shared.play("step-\(Self.ground(tile))-\(Int.random(in: 0...2))", volume: 0.25)
         }

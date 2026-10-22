@@ -152,6 +152,15 @@ Ein neues Gelände oder ein neues Requisit braucht ein neues Zeichen in `WorldGe
 - **Pfeil**: Oben in der Mitte steht, was gesucht wird, und ein Pfeil zeigt dorthin. Nach dem Finden zeigt er zurück zum Bewohner.
 - **Belohnung**: Bringt Hopper das Fundstück zurück, gibt es 5 Münzen und die Grummel verschwinden.
 
+## Superkraft Fliegen (`Flight.swift`)
+
+- Unten rechts ist der Flügel-Knopf. Antippen lässt Hopper abheben, nochmal antippen lässt ihn landen.
+- Im Flug hat Hopper zwei weiße Flügel, die schlagen. Er schwebt 2,6 über dem Boden und folgt den Bergen. Er fliegt 5,5 Kacheln pro Sekunde, über Wasser, Bäume, Häuser und Wände hinweg.
+- Der Schatten bleibt am Boden und wird kleiner, je höher Hopper ist.
+- **Energie**: Die Leiste unter den Herzen reicht für 10 Sekunden Flug. Am Boden lädt sie in 6 Sekunden wieder voll. Abheben geht ab 20 %. Ist sie leer, sinkt Hopper.
+- **Landen** geht nur auf freiem Boden. Über Wasser, Bäumen oder Wänden bleibt Hopper 0,6 hoch in der Luft und kann weiterlaufen, bis Platz zum Landen ist.
+- Grummel kommen nicht an fliegende Hopper heran: Sie hören auf zu jagen und beißen nicht.
+
 ## Leben in der Welt (`Life.swift`)
 
 Alles bewegt sich nur, wenn es in Hoppers Nähe ist. Ort und Takt kommen aus dem Hash, damit es nicht im Gleichschritt wackelt.
@@ -185,6 +194,9 @@ Alles bewegt sich nur, wenn es in Hoppers Nähe ist. Ort und Takt kommen aus dem
 | Ohnmacht | 8-Bit-Melodie abwärts | Fehler |
 | Grummel näher als 3 Kacheln | – | Herzschlag, je näher desto schneller |
 | Fisch springt | Platschen | – |
+| Abheben | Zisch nach oben | mittel |
+| Flügelschlag | leises Flattern | ganz leicht |
+| Landen | dumpfer Plumps | weich |
 
 ## Kamera
 
@@ -199,4 +211,4 @@ Alles bewegt sich nur, wenn es in Hoppers Nähe ist. Ort und Takt kommen aus dem
 
 ## Prüfen ohne Mac
 
-- CI baut die App, startet sie im iPhone-Simulator und macht Screenshots. Die Bilder stehen im Log zwischen `SCREENSHOT-BEGIN <name>` und `SCREENSHOT-END <name>` als Base64-JPEG und zusätzlich als Artefakt `screenshots`: `start` zeigt die Heimatinsel, `talk` ein Gespräch mit dem Hund am Start (Startargument `-screenshotTalk YES`), `village` ein erzeugtes Dorf, `hills` einen Weg den Berg hinauf zum Schnee, `quest` Hopper bei den Grummeln des ersten Auftrags vom Hund (Startargument `-screenshotQuest YES`, dabei bleibt immer ein Herz übrig). Mit dem Startargument `-screenshotStart x,z` beginnt Hopper an einer anderen Stelle. Weil das iPhone im Hochformat bootet, liegt das Querformat-Spiel im Bild um 90° gedreht.
+- CI baut die App, startet sie im iPhone-Simulator und macht Screenshots. Die Bilder stehen im Log zwischen `SCREENSHOT-BEGIN <name>` und `SCREENSHOT-END <name>` als Base64-JPEG und zusätzlich als Artefakt `screenshots`: `start` zeigt die Heimatinsel, `talk` ein Gespräch mit dem Hund am Start (Startargument `-screenshotTalk YES`), `village` ein erzeugtes Dorf, `hills` einen Weg den Berg hinauf zum Schnee, `quest` Hopper bei den Grummeln des ersten Auftrags vom Hund (Startargument `-screenshotQuest YES`, dabei bleibt immer ein Herz übrig), `fly` Hopper fliegend am Start (`-screenshotFly YES`, mit unendlich Energie). Mit dem Startargument `-screenshotStart x,z` beginnt Hopper an einer anderen Stelle. Weil das iPhone im Hochformat bootet, liegt das Querformat-Spiel im Bild um 90° gedreht.

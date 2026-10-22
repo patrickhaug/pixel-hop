@@ -21,6 +21,19 @@ enum Icons {
         "....k....",
     ]
 
+    static let wings = [
+        "............kk..",
+        "..kk.......kwwk.",
+        ".kwwk.....kwwxk.",
+        ".kwwwk...kwwwxk.",
+        "kwwwwwkkkwwwwxk.",
+        "kxwwwwkiikwwwwxk",
+        "kxxwwwkiikwwwxk.",
+        ".kxxwwkkkkwwxk..",
+        "..kkxxk..kxxk...",
+        "....kk....kk....",
+    ]
+
     static let arrow = [
         "....k....",
         "...kyk...",

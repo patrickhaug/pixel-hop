@@ -31,11 +31,13 @@ final class Game {
     private(set) var nearby: String?
     private(set) var dialog: Dialog?
     private(set) var adventure: Adventure?
+    private(set) var flight: Flight?
     var heading: Direction?
 
     private let root = Entity()
     private let hopper = Entity()
     private let body = Entity()
+    private let shadow = Entity()
     private let camera = PerspectiveCamera()
     @ObservationIgnored private var clock: FrameClock?
     @ObservationIgnored private var chunks: Chunks?
@@ -72,7 +74,10 @@ final class Game {
         adventure = Adventure(root: root, atlas: atlas, material: material)
         adventure?.practice = Self.screenshotQuest
         body.addChild(ModelEntity(mesh: try Models.hopper.mesh(atlas: atlas).resource(named: "hopper"), materials: [material]))
-        hopper.addChild(try Scenery.shadow())
+        flight = try Flight(body: body, atlas: atlas, material: material)
+        flight?.endless = Self.screenshotFly
+        shadow.addChild(try Scenery.shadow())
+        hopper.addChild(shadow)
         hopper.addChild(body)
         move(to: Self.start)
         hopper.position.y = WorldMap.height(Self.start)
@@ -90,6 +95,7 @@ final class Game {
 
     private static let screenshotTalk = UserDefaults.standard.bool(forKey: "screenshotTalk")
     private static let screenshotQuest = UserDefaults.standard.bool(forKey: "screenshotQuest")
+    private static let screenshotFly = UserDefaults.standard.bool(forKey: "screenshotFly")
 
     private static var start: SIMD2<Float> {
         let parts = UserDefaults.standard.string(forKey: "screenshotStart")?.split(separator: ",").compactMap { Float($0) } ?? []
@@ -98,24 +104,29 @@ final class Game {
 
     private func step(_ dt: Float) {
         time += dt
+        let airborne = flight?.airborne ?? false
         if let heading {
             facing = heading
-            walk(heading, by: walkSpeed * dt)
+            walk(heading, by: (flight?.flying == true ? Flight.speed : walkSpeed) * dt, free: airborne)
             hopTime += dt
         } else {
             hopTime = 0
         }
-        body.position.y = abs(sin(hopTime * 10)) * 0.25
+        body.position.y = airborne ? sin(time * 3) * 0.08 : abs(sin(hopTime * 10)) * 0.25
         let hop = Int(hopTime * 10 / .pi)
         if hop != lastHop {
             lastHop = hop
-            if hop > 0 { Cue.step(WorldMap.tile(at: hopperPosition)).play() }
+            if hop > 0 && !airborne { Cue.step(WorldMap.tile(at: hopperPosition)).play() }
         }
         let ground = WorldMap.height(hopperPosition)
-        if abs(ground - lastGround) > 0.4 { Cue.climb.play() }
+        if abs(ground - lastGround) > 0.4 && !airborne { Cue.climb.play() }
         lastGround = ground
+        flight?.update(dt, canLand: !Self.isBlocked(hopperPosition, from: hopperPosition))
+        let altitude = flight?.altitude ?? 0
         body.orientation = simd_slerp(body.orientation, simd_quatf(angle: facing.yaw, axis: [0, 1, 0]), min(1, dt * 14))
-        hopper.position.y += (WorldMap.height(hopperPosition) - hopper.position.y) * min(1, dt * 14)
+        hopper.position.y += (ground + altitude - hopper.position.y) * min(1, dt * 14)
+        shadow.position.y = ground - hopper.position.y + 0.01
+        shadow.scale = SIMD3<Float>(repeating: max(0.45, 1 - altitude * 0.2))
         follow()
         try? chunks?.update(around: hopperPosition, budget: 2)
         chunks?.life.update(time: time, dt: dt, around: hopper.position)
@@ -124,6 +135,9 @@ final class Game {
         updateAdventure(dt)
         if Self.screenshotTalk, time > 17, dialog == nil {
             talk()
+        }
+        if Self.screenshotFly, time > 1, flight?.flying == false {
+            fly()
         }
         if Self.screenshotQuest, time > 1, adventure?.target == nil {
             talk()
@@ -150,6 +164,10 @@ final class Game {
         dialog = Dialog(title: resident.title, text: answer.text)
     }
 
+    func fly() {
+        flight?.toggle()
+    }
+
     func closeDialog() {
         partner = nil
         dialog = nil
@@ -173,7 +191,7 @@ final class Game {
 
     private func updateAdventure(_ dt: Float) {
         guard let adventure else { return }
-        switch adventure.update(dt, time: time, hopper: hopperPosition) {
+        switch adventure.update(dt, time: time, hopper: hopperPosition, grounded: !(flight?.airborne ?? false)) {
         case .bitten(let grummel)?:
             let away = hopperPosition - grummel
             knock = simd_length(away) > 0.01 ? simd_normalize(away) * 7 : [0, 7]
@@ -215,10 +233,10 @@ final class Game {
         try? chunks?.update(around: point, budget: 8)
     }
 
-    private func walk(_ direction: Direction, by step: Float) {
+    private func walk(_ direction: Direction, by step: Float, free: Bool) {
         let position = SIMD2<Float>(hopper.position.x, hopper.position.z)
         let ahead = position + direction.vector * step
-        if !Self.isBlocked(ahead, from: position) {
+        if free || !Self.isBlocked(ahead, from: position) {
             move(to: ahead)
             return
         }
